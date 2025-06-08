@@ -5,7 +5,8 @@
   //   startCount
   // }: CounterProps = $props();
 
-  let count = $state(0); // Initialisation à 0 pour le test
+  export let startCount = 0; // Valeur par défaut à 0
+  let count = startCount;
 
   export function increment() {
     count += 1;
