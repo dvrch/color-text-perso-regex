@@ -30,29 +30,19 @@ export class ExampleView extends ItemView {
 	}
 
 	async onOpen() {
-		const container = this.contentEl;
-		container.empty();
-		container.addClass('example-view-container');
-		
-		container.style.padding = '20px';
-		container.style.height = '100%';
-		container.style.display = 'flex';
-		container.style.flexDirection = 'column';
-		container.style.alignItems = 'center';
-		container.style.justifyContent = 'center';
-		
 		this.counter = mount(Counter, {
-			target: container,
-			props: {
-				startCount: 5,
-			}
+			target: this.contentEl,
+			// props: {
+			// 	startCount: 5,
+			// }
 		});
+
+		this.counter.increment();
 	}
 
 	async onClose() {
 		if (this.counter) {
 			unmount(this.counter);
-			this.counter = undefined;
 		}
 	}
 }
