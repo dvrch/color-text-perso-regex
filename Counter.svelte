@@ -1,10 +1,4 @@
 <script lang="ts">
-  // import type { CounterProps } from './types';
-
-  // let {
-  //   startCount
-  // }: CounterProps = $props();
-
   let { startCount = 0 } = $props();
   let count = $state(startCount);
 
@@ -29,11 +23,16 @@
     flex-direction: column;
     gap: 1rem;
     align-items: center;
+    background-color: var(--background-primary);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin: 1rem;
   }
 
   .number {
-    color: red;
+    color: var(--text-normal);
     font-size: 1.2rem;
+    font-weight: bold;
   }
 
   button {
@@ -43,6 +42,7 @@
     border: none;
     border-radius: 4px;
     cursor: pointer;
+    transition: background-color 0.2s ease;
   }
 
   button:hover {
