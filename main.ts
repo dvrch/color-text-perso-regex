@@ -32,9 +32,9 @@ export class ExampleView extends ItemView {
 	async onOpen() {
 		this.counter = mount(Counter, {
 			target: this.contentEl,
-			// props: {
-			// 	startCount: 5,
-			// }
+			props: {
+				startCount: 5,
+			}
 		});
 
 		this.counter.increment();
