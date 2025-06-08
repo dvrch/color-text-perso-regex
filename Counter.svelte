@@ -5,8 +5,8 @@
   //   startCount
   // }: CounterProps = $props();
 
-  export let startCount = 0; // Valeur par défaut à 0
-  let count = startCount;
+  let { startCount = 0 } = $props();
+  let count = $state(startCount);
 
   function increment() {
     count += 1;
@@ -17,7 +17,7 @@
   <div class="number">
     <span>My number is {count}!</span>
   </div>
-  <button on:click={increment}>
+  <button onclick={increment}>
     Increment
   </button>
 </div>
