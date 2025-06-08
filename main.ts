@@ -1,4 +1,6 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, ItemView, WorkspaceLeaf, type PluginManifest, type MarkdownFileInfo } from 'obsidian';
+import Counter from './Counter.svelte';
+import { mount, unmount } from './svelte-utils';
 
 // Remember to rename these classes and interfaces!
 
@@ -10,8 +12,48 @@ const DEFAULT_SETTINGS: MyPluginSettings = {
 	mySetting: 'default'
 }
 
+export const VIEW_TYPE_EXAMPLE = 'example-view';
+
+export class ExampleView extends ItemView {
+	counter: Counter | undefined;
+
+	constructor(leaf: WorkspaceLeaf) {
+		super(leaf);
+	}
+
+	getViewType() {
+		return VIEW_TYPE_EXAMPLE;
+	}
+
+	getDisplayText() {
+		return 'Example view';
+	}
+
+	async onOpen() {
+		this.counter = mount(Counter, {
+			target: this.contentEl,
+			props: {
+				startCount: 5,
+			}
+		});
+
+		this.counter.increment();
+	}
+
+	async onClose() {
+		if (this.counter) {
+			unmount(this.counter);
+		}
+	}
+}
+
 export default class MyPlugin extends Plugin {
 	settings: MyPluginSettings;
+
+	constructor(app: App, manifest: PluginManifest) {
+		super(app, manifest);
+		this.settings = DEFAULT_SETTINGS;
+	}
 
 	async onload() {
 		await this.loadSettings();
@@ -40,7 +82,7 @@ export default class MyPlugin extends Plugin {
 		this.addCommand({
 			id: 'sample-editor-command',
 			name: 'Sample editor command',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
+			editorCallback: (editor: Editor, view: MarkdownView | MarkdownFileInfo) => {
 				console.log(editor.getSelection());
 				editor.replaceSelection('Sample Editor Command');
 			}
@@ -76,10 +118,26 @@ export default class MyPlugin extends Plugin {
 
 		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
 		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
+
+		this.registerView(
+			VIEW_TYPE_EXAMPLE,
+			(leaf) => new ExampleView(leaf)
+		);
+
+		this.addCommand({
+			id: 'open-example-view',
+			name: 'Open Example View',
+			callback: () => {
+				this.app.workspace.getLeaf(true).setViewState({
+					type: VIEW_TYPE_EXAMPLE,
+					active: true,
+				});
+			},
+		});
 	}
 
 	onunload() {
-
+		this.app.workspace.detachLeavesOfType(VIEW_TYPE_EXAMPLE);
 	}
 
 	async loadSettings() {

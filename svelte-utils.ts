@@ -1,0 +1,10 @@
+import type { SvelteComponent } from 'svelte';
+import type { CounterProps } from './types';
+
+export function mount<T extends SvelteComponent>(Component: new (options: { target: HTMLElement; props?: CounterProps }) => T, options: { target: HTMLElement; props?: CounterProps }): T {
+  return new Component(options);
+}
+
+export function unmount(component: SvelteComponent) {
+  component.$destroy();
+} 
