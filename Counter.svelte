@@ -1,11 +1,11 @@
 <script lang="ts">
-  import type { CounterProps } from './types';
+  // import type { CounterProps } from './types';
 
-  let {
-    startCount
-  }: CounterProps = $props();
+  // let {
+  //   startCount
+  // }: CounterProps = $props();
 
-  let count = $state(startCount);
+  let count = $state(0); // Initialisation à 0 pour le test
 
   export function increment() {
     count += 1;

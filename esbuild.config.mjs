@@ -2,9 +2,9 @@ import esbuild from "esbuild";
 import process from "process";
 import builtins from "builtin-modules";
 import esbuildSvelte from 'esbuild-svelte';
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
-const sveltePreprocess = require('svelte-preprocess');
+// import { createRequire } from 'module';
+// const require = createRequire(import.meta.url);
+// const sveltePreprocess = require('svelte-preprocess');
 
 const banner =
 `/*
@@ -46,7 +46,7 @@ const context = await esbuild.context({
 	plugins: [
 		esbuildSvelte({
 			compilerOptions: { css: 'injected' },
-			preprocess: sveltePreprocess(),
+			// preprocess: sveltePreprocess(),
 			emitCss: false
 		}),
 	],

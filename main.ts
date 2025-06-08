@@ -32,9 +32,9 @@ export class ExampleView extends ItemView {
 	async onOpen() {
 		this.counter = mount(Counter, {
 			target: this.contentEl,
-			props: {
-				startCount: 5,
-			}
+			// props: {
+			// 	startCount: 5,
+			// }
 		});
 
 		this.counter.increment();
@@ -60,8 +60,10 @@ export default class MyPlugin extends Plugin {
 
 		// This creates an icon in the left ribbon.
 		const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (evt: MouseEvent) => {
-			// Called when the user clicks the icon.
-			new Notice('This is a notice!');
+			this.app.workspace.getLeaf(true).setViewState({
+				type: VIEW_TYPE_EXAMPLE,
+				active: true,
+			});
 		});
 		// Perform additional things with the ribbon
 		ribbonIconEl.addClass('my-plugin-ribbon-class');
