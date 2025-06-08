@@ -23,6 +23,9 @@ importers:
       esbuild:
         specifier: 0.17.3
         version: 0.17.3
+      esbuild-svelte:
+        specifier: ^0.9.3
+        version: 0.9.3(esbuild@0.17.3)(svelte@4.2.20)
       eslint:
         specifier: ^8.57.0
         version: 8.57.1
@@ -30,11 +33,14 @@ importers:
         specifier: latest
         version: 1.8.7(@codemirror/state@6.5.2)(@codemirror/view@6.37.1)
       svelte:
-        specifier: ^4.2.12
+        specifier: ^4.2.20
         version: 4.2.20
       svelte-check:
-        specifier: ^3.6.6
+        specifier: ^3.8.6
         version: 3.8.6(svelte@4.2.20)
+      svelte-preprocess:
+        specifier: ^6.0.3
+        version: 6.0.3(svelte@4.2.20)(typescript@5.0.4)
       tslib:
         specifier: 2.4.1
         version: 2.4.1
@@ -454,6 +460,13 @@ packages:
   es6-promise@3.3.1:
     resolution: {integrity: sha512-SOp9Phqvqn7jtEUxPWdWfWoLmyt2VaJ6MpvP9Comy1MceMXqE6bxvaTu4iaxpYYPzhny28Lc+M87/c2cPK6lDg==}
 
+  esbuild-svelte@0.9.3:
+    resolution: {integrity: sha512-CgEcGY1r/d16+aggec3czoFBEBaYIrFOnMxpsO6fWNaNEqHregPN5DLAPZDqrL7rXDNplW+WMu8s3GMq9FqgJA==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      esbuild: '>=0.17.0'
+      svelte: '>=4.2.1 <6'
+
   esbuild@0.17.3:
     resolution: {integrity: sha512-9n3AsBRe6sIyOc6kmoXg2ypCLgf3eZSraWFRpnkto+svt8cZNuKTkb1bhQcitBcvIqjNiK7K0J3KPmwGSfkA8g==}
     engines: {node: '>=12'}
@@ -856,6 +869,43 @@ packages:
       sugarss: ^2.0.0 || ^3.0.0 || ^4.0.0
       svelte: ^3.23.0 || ^4.0.0-next.0 || ^4.0.0 || ^5.0.0-next.0
       typescript: '>=3.9.5 || ^4.0.0 || ^5.0.0'
+    peerDependenciesMeta:
+      '@babel/core':
+        optional: true
+      coffeescript:
+        optional: true
+      less:
+        optional: true
+      postcss:
+        optional: true
+      postcss-load-config:
+        optional: true
+      pug:
+        optional: true
+      sass:
+        optional: true
+      stylus:
+        optional: true
+      sugarss:
+        optional: true
+      typescript:
+        optional: true
+
+  svelte-preprocess@6.0.3:
+    resolution: {integrity: sha512-PLG2k05qHdhmRG7zR/dyo5qKvakhm8IJ+hD2eFRQmMLHp7X3eJnjeupUtvuRpbNiF31RjVw45W+abDwHEmP5OA==}
+    engines: {node: '>= 18.0.0'}
+    peerDependencies:
+      '@babel/core': ^7.10.2
+      coffeescript: ^2.5.1
+      less: ^3.11.3 || ^4.0.0
+      postcss: ^7 || ^8
+      postcss-load-config: '>=3'
+      pug: ^3.0.0
+      sass: ^1.26.8
+      stylus: '>=0.55'
+      sugarss: ^2.0.0 || ^3.0.0 || ^4.0.0
+      svelte: ^4.0.0 || ^5.0.0-next.100 || ^5.0.0
+      typescript: ^5.0.0
     peerDependenciesMeta:
       '@babel/core':
         optional: true
@@ -1304,6 +1354,12 @@ snapshots:
 
   es6-promise@3.3.1: {}
 
+  esbuild-svelte@0.9.3(esbuild@0.17.3)(svelte@4.2.20):
+    dependencies:
+      '@jridgewell/trace-mapping': 0.3.25
+      esbuild: 0.17.3
+      svelte: 4.2.20
+
   esbuild@0.17.3:
     optionalDependencies:
       '@esbuild/android-arm': 0.17.3
@@ -1734,6 +1790,12 @@ snapshots:
       magic-string: 0.30.17
       sorcery: 0.11.1
       strip-indent: 3.0.0
+      svelte: 4.2.20
+    optionalDependencies:
+      typescript: 5.0.4
+
+  svelte-preprocess@6.0.3(svelte@4.2.20)(typescript@5.0.4):
+    dependencies:
       svelte: 4.2.20
     optionalDependencies:
       typescript: 5.0.4
