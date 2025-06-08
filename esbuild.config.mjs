@@ -1,8 +1,8 @@
 import esbuild from "esbuild";
 import process from "process";
 import builtins from "builtin-modules";
-import esbuildSvelte from 'esbuild-svelte';
-import { sveltePreprocess } from 'svelte-preprocess';
+import esbuildSvelte from "esbuild-svelte";
+import sveltePreprocess from "svelte-preprocess";
 // import { createRequire } from 'module';
 // const require = createRequire(import.meta.url);
 // const sveltePreprocess = require('svelte-preprocess');
@@ -46,7 +46,10 @@ const context = await esbuild.context({
 	minify: prod,
 	plugins: [
 		esbuildSvelte({
-			compilerOptions: { css: 'injected' },
+			compilerOptions: { 
+				css: 'injected',
+				dev: !prod
+			},
 			preprocess: sveltePreprocess(),
 			emitCss: false
 		}),
