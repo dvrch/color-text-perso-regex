@@ -28,21 +28,38 @@
 
   function highlight(text: string): string {
     if (!text) return "";
-    
-    try {
-      let result = escapeHtml(text);
-      
-      for (const pattern of patterns) {
-        result = result.replace(pattern.regex, match => 
-          `<span class="${pattern.cls}">${match}</span>`
-        );
+
+    let result = "";
+    let lastIndex = 0;
+
+    const allMatches: { start: number; end: number; text: string; cls: string }[] = [];
+    for (const pattern of patterns) {
+      const regex = new RegExp(pattern.regex.source, 'g' + pattern.regex.flags.replace('g', ''));
+      let match;
+      while ((match = regex.exec(text)) !== null) {
+        allMatches.push({
+          start: match.index,
+          end: match.index + match[0].length,
+          text: match[0],
+          cls: pattern.cls
+        });
       }
-      
-      return result;
-    } catch (error) {
-      console.error("Erreur de coloration syntaxique:", error);
-      return `<span class="error">Erreur de coloration: ${escapeHtml(error.message)}</span>`;
     }
+
+    allMatches.sort((a, b) => a.start - b.start);
+
+    for (const match of allMatches) {
+      // Append the text before the current match, escaping it
+      result += escapeHtml(text.substring(lastIndex, match.start));
+      // Append the highlighted match, escaping its content
+      result += `<span class="${match.cls}">${escapeHtml(match.text)}</span>`;
+      lastIndex = match.end;
+    }
+
+    // Append any remaining text at the end, escaping it
+    result += escapeHtml(text.substring(lastIndex));
+
+    return result;
   }
 
   // Réactivité Svelte
