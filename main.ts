@@ -1,4 +1,4 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, ItemView, WorkspaceLeaf, type PluginManifest, type MarkdownFileInfo } from 'obsidian';
+import { App, Editor, MarkdownView, Modal, /* Notice, */ Plugin, PluginSettingTab, Setting, ItemView, WorkspaceLeaf, type PluginManifest, type MarkdownFileInfo } from 'obsidian';
 import SyntaxHighlighter from './SyntaxHighlighter.svelte';
 import { mount, unmount } from './svelte-utils';
 
@@ -32,6 +32,12 @@ export class SyntaxHighlighterView extends ItemView {
 	}
 
 	async onOpen() {
+		// Read content of the active file and pass it to the Svelte component on open
+		const activeFile = this.app.workspace.getActiveFile();
+		if (activeFile) {
+			this.content = await this.app.vault.read(activeFile);
+		}
+
 		this.highlighter = mount(SyntaxHighlighter, {
 			target: this.contentEl,
 			props: {
