@@ -3,6 +3,7 @@ import process from "process";
 import builtins from "builtin-modules";
 import esbuildSvelte from "esbuild-svelte";
 import sveltePreprocess from "svelte-preprocess";
+import esbuildObsidian from "esbuild-plugin-obsidian";
 // import { createRequire } from 'module';
 // const require = createRequire(import.meta.url);
 // const sveltePreprocess = require('svelte-preprocess');
@@ -38,7 +39,8 @@ const context = await esbuild.context({
 		"@lezer/lr",
 		...builtins],
 	format: "cjs",
-	target: "es2018",
+	target: "node18",
+	platform: "node",
 	logLevel: "info",
 	sourcemap: prod ? false : "inline",
 	treeShaking: true,
@@ -48,11 +50,12 @@ const context = await esbuild.context({
 		esbuildSvelte({
 			compilerOptions: { 
 				css: 'injected',
-				dev: !prod
+				dev: false,
 			},
 			preprocess: sveltePreprocess(),
 			emitCss: false
 		}),
+		esbuildObsidian(),
 	],
 });
 
