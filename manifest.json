@@ -1,11 +1,9 @@
 {
-	"id": "obsidian-syntax-highlight",
-	"name": "Syntax Highlighter",
-	"version": "1.0.0",
-	"minAppVersion": "0.15.0",
-	"description": "Ajoute la coloration syntaxique personnalisée pour différents types de fichiers dans Obsidian.",
-	"author": "DJONTSO V",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
-	"isDesktopOnly": false
+  "id": "obsidian-sample-plugin",
+  "version": "1.0.0",
+  "name": "Svelte Syntax Highlighter",
+  "minAppVersion": "1.0.0",
+  "isDesktopOnly": false,
+  "description": "This is a sample plugin for Obsidian (https://obsidian.md)",
+  "author": ""
 }

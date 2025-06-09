@@ -13,6 +13,7 @@ const DEFAULT_SETTINGS: MyPluginSettings = {
 }
 
 export const VIEW_TYPE_SYNTAX = 'syntax-highlighter-view';
+export const VIEW_TYPE_EXAMPLE = 'example-view';
 
 export class SyntaxHighlighterView extends ItemView {
 	highlighter: SyntaxHighlighter | undefined;
@@ -67,7 +68,7 @@ export default class MyPlugin extends Plugin {
 		// This creates an icon in the left ribbon.
 		const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (evt: MouseEvent) => {
 			this.app.workspace.getLeaf(true).setViewState({
-				type: VIEW_TYPE_EXAMPLE,
+				type: VIEW_TYPE_SYNTAX,
 				active: true,
 			});
 		});
@@ -128,24 +129,49 @@ export default class MyPlugin extends Plugin {
 		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
 
 		this.registerView(
-			VIEW_TYPE_EXAMPLE,
-			(leaf) => new ExampleView(leaf)
+			VIEW_TYPE_SYNTAX,
+			(leaf) => new SyntaxHighlighterView(leaf)
 		);
 
 		this.addCommand({
-			id: 'open-example-view',
-			name: 'Open Example View',
+			id: 'open-syntax-highlighter-view',
+			name: 'Open Syntax Highlighter View',
 			callback: () => {
 				this.app.workspace.getLeaf(true).setViewState({
-					type: VIEW_TYPE_EXAMPLE,
+					type: VIEW_TYPE_SYNTAX,
 					active: true,
 				});
 			},
 		});
+
+		this.registerEvent(this.app.workspace.on('file-open', async (file) => {
+			if (file) {
+				const content = await this.app.vault.read(file);
+				this.app.workspace.getLeavesOfType(VIEW_TYPE_SYNTAX).forEach(leaf => {
+					if (leaf.view instanceof SyntaxHighlighterView) {
+						leaf.view.updateContent(content);
+					}
+				});
+			}
+		}));
+
+		this.registerEvent(this.app.workspace.on('active-leaf-change', async (leaf) => {
+			if (leaf && leaf.view instanceof MarkdownView) {
+				const activeFile = leaf.view.file;
+				if (activeFile) {
+					const content = await this.app.vault.read(activeFile);
+					this.app.workspace.getLeavesOfType(VIEW_TYPE_SYNTAX).forEach(syntaxLeaf => {
+						if (syntaxLeaf.view instanceof SyntaxHighlighterView) {
+							syntaxLeaf.view.updateContent(content);
+						}
+					});
+				}
+			}
+		}));
 	}
 
 	onunload() {
-		this.app.workspace.detachLeavesOfType(VIEW_TYPE_EXAMPLE);
+		this.app.workspace.detachLeavesOfType(VIEW_TYPE_SYNTAX);
 	}
 
 	async loadSettings() {
