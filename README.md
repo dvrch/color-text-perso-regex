@@ -90,3 +90,6 @@ Feel free to open issues or submit pull requests. All contributions are welcome!
 ## License
 
 This plugin is licensed under the MIT License. See the `LICENSE` file for more details.
+
+c est OK, ais affiche genre code source 
+En plus il faut faire des allés-retoure : 1ere fois c est vide, il faut aller ailleur puis revenir dessus pour que  ça apparait 
