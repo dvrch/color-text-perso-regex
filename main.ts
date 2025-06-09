@@ -1,5 +1,5 @@
 import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, ItemView, WorkspaceLeaf, type PluginManifest, type MarkdownFileInfo } from 'obsidian';
-import Counter from './Counter.svelte';
+import SyntaxHighlighter from './SyntaxHighlighter.svelte';
 import { mount, unmount } from './svelte-utils';
 
 // Remember to rename these classes and interfaces!
@@ -12,37 +12,43 @@ const DEFAULT_SETTINGS: MyPluginSettings = {
 	mySetting: 'default'
 }
 
-export const VIEW_TYPE_EXAMPLE = 'example-view';
+export const VIEW_TYPE_SYNTAX = 'syntax-highlighter-view';
 
-export class ExampleView extends ItemView {
-	counter: Counter | undefined;
+export class SyntaxHighlighterView extends ItemView {
+	highlighter: SyntaxHighlighter | undefined;
+	content: string = '';
 
 	constructor(leaf: WorkspaceLeaf) {
 		super(leaf);
 	}
 
 	getViewType() {
-		return VIEW_TYPE_EXAMPLE;
+		return VIEW_TYPE_SYNTAX;
 	}
 
 	getDisplayText() {
-		return 'Example view';
+		return 'Syntax Highlighter';
 	}
 
 	async onOpen() {
-		this.counter = mount(Counter, {
+		this.highlighter = mount(SyntaxHighlighter, {
 			target: this.contentEl,
-			// props: {
-			// 	startCount: 5,
-			// }
+			props: {
+				content: this.content
+			}
 		});
-
-		this.counter.increment();
 	}
 
 	async onClose() {
-		if (this.counter) {
-			unmount(this.counter);
+		if (this.highlighter) {
+			unmount(this.highlighter);
+		}
+	}
+
+	async updateContent(newContent: string) {
+		this.content = newContent;
+		if (this.highlighter) {
+			this.highlighter.$set({ content: newContent });
 		}
 	}
 }
