@@ -1,9 +1,15 @@
-<script lang="ts">
-  export let content: string = "";
-  let highlighted = "";
 
-  // Regex inspirés de dj.sublime-syntax
-  const patterns = [
+<script lang="ts">
+  import type { CustomPatternConfig } from './main'; // Import the interface
+
+  export let content: string = "";
+  export let customPatterns: CustomPatternConfig[] = [];
+  export let enableGlobalSyntaxHighlighting: boolean = true;
+
+  let highlighted: string = "";
+
+  // Built-in patterns (can be kept as a base)
+  const builtInPatterns = [
     { regex: /#.*$/gm, cls: "comm-dj" },
     { regex: /\b(?:0[xX][0-9a-fA-F]+|0[oO][0-7]+|0[bB][01]+|[0-9]+\.[0-9]*(?:[eE][+-]?[0-9]+)?|[0-9]+)\b/g, cls: "num-dj" },
     { regex: /[\+\-\*\/]|\/\/|\\|%|@|<<|>>|&|\^|~|<|>|<=|>=|==|!=|:=|=/g, cls: "op-dj" },
@@ -15,151 +21,166 @@
     { regex: /([A-Z])/g, cls: "caps-dj", captureGroup: 1 }
   ];
 
-  function escapeHtml(str: string): string {
-    const htmlEntities = {
+  function escapeHtml(str: string | undefined | null): string {
+    if (str === undefined || str === null) return "";
+    const htmlEntities: Record<string, string> = {
       '&': '&amp;',
       '<': '&lt;',
       '>': '&gt;',
       '"': '&quot;',
       "'": '&#39;'
     };
-    return str.replace(/[&<>"']/g, char => htmlEntities[char] || char);
+    return String(str).replace(/[&<>"']/g, char => htmlEntities[char] || char);
   }
 
-  function highlight(text: string): string {
-    if (!text) return "";
+  interface Match {
+    start: number;
+    end: number;
+    text: string;
+    cls?: string;
+    style?: string;
+    priority: number; // For sorting: custom patterns might have higher priority
+  }
+  
+  function highlightContent(text: string, localCustomPatterns: CustomPatternConfig[], globalEnable: boolean): string {
+    if (!text || !globalEnable) return escapeHtml(text);
 
     let result = "";
     let lastIndex = 0;
+    const allMatches: Match[] = [];
 
-    const allMatches: { start: number; end: number; text: string; cls: string; }[] = [];
-
-    for (const pattern of patterns) {
+    // Process built-in patterns
+    builtInPatterns.forEach(pattern => {
       const regex = new RegExp(pattern.regex.source, 'g' + pattern.regex.flags.replace('g', ''));
       let match;
       while ((match = regex.exec(text)) !== null) {
-        const capturedText = pattern.captureGroup !== undefined ? match[pattern.captureGroup] : match[0];
+        const captureGroupIndex = typeof pattern.captureGroup === 'string' ? parseInt(pattern.captureGroup,10) : pattern.captureGroup;
+        const capturedText = captureGroupIndex !== undefined && !isNaN(captureGroupIndex) && match[captureGroupIndex] !== undefined ? match[captureGroupIndex] : match[0];
         const start = match.index + (match[0].indexOf(capturedText));
         const end = start + capturedText.length;
+        if (capturedText.length === 0) continue; // Skip empty matches
 
         allMatches.push({
           start: start,
           end: end,
           text: capturedText,
-          cls: pattern.cls
+          cls: pattern.cls,
+          priority: 1 // Lower priority for built-in
         });
       }
+    });
+    
+    // Process custom patterns
+    if (localCustomPatterns) {
+      localCustomPatterns.forEach(customPattern => {
+        if (!customPattern.enabled || !customPattern.regex) return;
+        try {
+          const regex = new RegExp(customPattern.regex, customPattern.flags || 'g');
+          let match;
+          while ((match = regex.exec(text)) !== null) {
+            const captureGroupIndex = customPattern.captureGroup ? parseInt(customPattern.captureGroup, 10) : undefined;
+            const capturedText = captureGroupIndex !== undefined && !isNaN(captureGroupIndex) && match[captureGroupIndex] !== undefined ? match[captureGroupIndex] : match[0];
+            
+            if (capturedText === undefined || capturedText.length === 0) continue; // Skip empty or undefined matches
+
+            const start = match.index + (match[0].indexOf(capturedText));
+            const end = start + capturedText.length;
+
+            allMatches.push({
+              start: start,
+              end: end,
+              text: capturedText,
+              cls: customPattern.cls || 'custom-highlight',
+              style: customPattern.color ? `color: ${customPattern.color};` : '',
+              priority: 2 // Higher priority for custom
+            });
+          }
+        } catch (e) {
+          console.warn(`SyntaxHighlighter: Invalid regex for custom pattern "${customPattern.regex}":`, e);
+        }
+      });
     }
 
-    // Sort matches by start index, then by end index to prioritize more specific matches (longer or earlier ending)
-    allMatches.sort((a, b) => a.start - b.start || b.end - a.end);
-
-    // Filter out overlapping matches, prioritizing earlier and longer matches
-    const nonOverlappingMatches: typeof allMatches = [];
+    // Sort matches: by start index, then by priority (custom over built-in), then by end index (longer matches first if at same start)
+    allMatches.sort((a, b) => {
+      if (a.start !== b.start) return a.start - b.start;
+      if (a.priority !== b.priority) return b.priority - a.priority; // Higher priority first
+      return b.end - a.end; // Longer match first
+    });
+    
+    const nonOverlappingMatches: Match[] = [];
     let currentCoverageEnd = -1;
 
     for (const match of allMatches) {
-        if (match.start >= currentCoverageEnd) {
-            // This match does not overlap with previous accepted matches
-            nonOverlappingMatches.push(match);
-            currentCoverageEnd = match.end;
-        } else if (match.end > currentCoverageEnd) {
-            // This match overlaps, but extends further. Potentially a more inclusive match.
-            // For simplicity, we'll keep the first one that covers the range most broadly.
-            // A more complex solution might merge or select based on pattern specificity.
-            // For now, we'll just extend coverage if this match goes beyond current accepted.
-            currentCoverageEnd = match.end;
-        }
+      if (match.start >= currentCoverageEnd) {
+        nonOverlappingMatches.push(match);
+        currentCoverageEnd = match.end;
+      }
+      // Simple overlap handling: if a higher priority or longer match starts at the same point, it would have been sorted earlier.
+      // This greedy approach takes the first valid match. More complex scenarios might need refinement.
     }
 
     for (const match of nonOverlappingMatches) {
-      // Append the text before the current match, escaping it
       result += escapeHtml(text.substring(lastIndex, match.start));
-      // Append the highlighted match, escaping its content
-      result += `<span class="${match.cls}">${escapeHtml(match.text)}</span>`;
+      const styleAttr = match.style ? ` style="${escapeHtml(match.style)}"` : "";
+      const classAttr = match.cls ? ` class="${escapeHtml(match.cls)}"` : "";
+      result += `<span${classAttr}${styleAttr}>${escapeHtml(match.text)}</span>`;
       lastIndex = match.end;
     }
 
-    // Append any remaining text at the end, escaping it
     result += escapeHtml(text.substring(lastIndex));
-
     return result;
   }
 
-  // Réactivité Svelte
   $: {
     try {
-      highlighted = highlight(content);
-    } catch (error) {
-      console.error("Erreur de mise à jour:", error);
-      highlighted = `<span class="error">Erreur de mise à jour: ${escapeHtml(error.message)}</span>`;
+      highlighted = highlightContent(content, customPatterns, enableGlobalSyntaxHighlighting);
+    } catch (error: any) {
+      console.error("SyntaxHighlighter.svelte - Erreur de mise à jour:", error);
+      highlighted = `<span class="error-dj">Erreur de mise à jour: ${escapeHtml(error.message)}</span>`;
     }
   }
 </script>
 
-<div class="syntax-container" role="code">
+<div class="syntax-container-dj" role="region" aria-label="Highlighted Code Content">
   {@html highlighted}
 </div>
 
 <style>
-  .syntax-container {
+  .syntax-container-dj {
     background-color: var(--background-primary);
     color: var(--text-normal);
-    font-family: var(--font-monospace);
-    padding: 1rem;
-    border-radius: 4px;
+    font-family: var(--font-monospace, monospace);
+    padding: 1em;
+    border-radius: var(--radius-m, 4px);
     overflow-x: auto;
-    white-space: pre-wrap;
-    line-height: 1.5;
+    white-space: pre-wrap; /* Allows wrapping and preserves spaces/tabs */
+    word-wrap: break-word; /* Break long words to prevent overflow */
+    line-height: 1.6;
+    font-size: var(--font-ui-small, 0.9em);
   }
 
-  /* Coloration syntaxique */
-  :global(.key-dj) {
-    color: #F92672;
-    font-style: italic;
+  /* Default syntax highlighting styles (for built-in patterns or custom patterns without specific colors) */
+  :global(.key-dj) { color: #F92672; font-weight: bold; }
+  :global(.func-dj) { color: #A6E22E; }
+  :global(.comm-dj) { color: #75715E; font-style: italic; } /* Adjusted for better visibility on dark themes */
+  :global(.type-dj) { color: #66D9EF; font-style: italic; }
+  :global(.op-dj) { color: #FD971F; } /* Orange for operators */
+  :global(.num-dj) { color: #AE81FF; }
+  :global(.ponct-dj) { color: var(--text-muted); } /* More subtle punctuation */
+  :global(.sent-dj) { color: #E6DB74; } /* Yellow for sentences/strings often */
+  :global(.caps-dj) { color: #A6E22E; }
+
+  /* Generic class for custom highlights if no specific class is given by user, or as a fallback */
+  :global(.custom-highlight) {
+    /* Base style, color will be overridden by inline style if provided */
+  }
+
+  :global(.error-dj) {
+    color: var(--text-error, #ff5555);
     font-weight: bold;
-  }
-
-  :global(.func-dj) {
-    color: #A6E22E;
-    font-weight: bold;
-  }
-
-  :global(.comm-dj) {
-    color: #16FF00;
-    font-style: italic;
-  }
-
-  :global(.type-dj) {
-    color: #66D9EF;
-    font-style: italic;
-  }
-
-  :global(.op-dj) {
-    color: #F92672;
-  }
-
-  :global(.num-dj) {
-    color: #AE81FF;
-  }
-
-  :global(.ponct-dj) {
-    color: #A8F819;
-  }
-
-  :global(.sent-dj) {
-    color: #66D9EF;
-  }
-
-  :global(.caps-dj) {
-    color: #A6E22E;
-  }
-
-  :global(.error) {
-    color: #ff5555;
-    font-weight: bold;
-    background-color: rgba(255, 0, 0, 0.1);
-    padding: 0.2rem 0.4rem;
-    border-radius: 2px;
+    background-color: var(--background-modifier-error, rgba(255, 0, 0, 0.1));
+    padding: 0.2em 0.4em;
+    border-radius: var(--radius-s, 2px);
   }
 </style>
