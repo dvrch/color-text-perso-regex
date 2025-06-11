@@ -22,17 +22,23 @@ export interface MyPluginSettings {
   customPatterns: CustomPatternConfig[];
 }
 
+// Updated DEFAULT_PATTERNS based on user's Sublime Text .tmTheme and .sublime-syntax
 const DEFAULT_PATTERNS: CustomPatternConfig[] = [
-  { id: 'default-comment', name: 'Comments (#...)', enabled: true, regex: '#.*$', flags: 'gm', cls: 'comm-dj', color: '#75715E', captureGroup: '' },
-  { id: 'default-numbers', name: 'Numbers', enabled: true, regex: '\\b(?:0[xX][0-9a-fA-F]+|0[oO][0-7]+|0[bB][01]+|[0-9]+\\.[0-9]*(?:[eE][+-]?[0-9]+)?|[0-9]+)\\b', flags: 'g', cls: 'num-dj', color: '#AE81FF', captureGroup: '' },
-  { id: 'default-operators', name: 'Operators', enabled: true, regex: '\\+|-|\\*|\\/|\\/\\/|\\\\|%|@|<<|>>|&|\\||\\^|~|<|>|<=|>=|==|!=|:=|=', flags: 'g', cls: 'op-dj', color: '#FD971F', captureGroup: '' },
-  { id: 'default-punctuation', name: 'Punctuation', enabled: true, regex: '[\\.,;:?!\\|µ]', flags: 'g', cls: 'ponct-dj', color: 'var(--text-muted)', captureGroup: '' },
-  { id: 'default-class-def', name: 'Class Name (after class)', enabled: true, regex: '\\bclass\\s+([a-zA-Z_][a-zA-Z0-9_]*)', flags: 'g', cls: 'type-dj', color: '#66D9EF', captureGroup: '1' },
-  { id: 'default-function-call', name: 'Function Names/Calls', enabled: true, regex: '([a-zA-Z_][a-zA-Z0-9_]*)\\s*\\(', flags: 'g', cls: 'func-dj', color: '#A6E22E', captureGroup: '1' },
-  { id: 'default-keywords', name: 'Keywords', enabled: true, regex: '\\b(and|as|assert|async|await|break|class|continue|def|del|elif|else|except|finally|for|from|global|if|import|in|is|lambda|nonlocal|not|or|pass|raise|return|try|while|with|yield)\\b', flags: 'g', cls: 'key-dj', color: '#F92672', captureGroup: '' },
-  { id: 'default-sentence-caps', name: 'Sentence Start Capitals', enabled: true, regex: '(?:^|[.!?]\\s+)([A-Z])', flags: 'g', cls: 'sent-dj', color: '#E6DB74', captureGroup: '1' },
-  { id: 'default-general-caps', name: 'Capital Letters', enabled: true, regex: '([A-Z])', flags: 'g', cls: 'caps-dj', color: '#A6E22E', captureGroup: '1' }
+  // From sublime-syntax and tmTheme
+  { id: 'dj-comment', name: 'DJ Comments (#...)', enabled: true, regex: '#.*$', flags: 'gm', cls: 'comm-dj', color: '#16FF00', captureGroup: '' },
+  { id: 'dj-numbers', name: 'DJ Numbers', enabled: true, regex: '\\b(?:0[xX][0-9a-fA-F]+|0[oO][0-7]+|0[bB][01]+|[0-9]+\\.[0-9]*(?:[eE][+-]?[0-9]+)?|[0-9]+)\\b', flags: 'g', cls: 'num-dj', color: '#AE81FF', captureGroup: '' },
+  { id: 'dj-operators', name: 'DJ Operators', enabled: true, regex: '\\+|-|\\*|\\/|\\/\\/|\\|\\||\\\\|%|@|<<|>>|&|\\||\\^|~|<|>|<=|>=|==|!=|:=|=', flags: 'g', cls: 'op-dj', color: '#F92672', captureGroup: '' }, // Color from op.dj in theme
+  { id: 'dj-punctuation', name: 'DJ Punctuation', enabled: true, regex: '[.,;:?!|µ]', flags: 'g', cls: 'ponct-dj', color: '#A8F819', captureGroup: '' },
+  { id: 'dj-class-def', name: 'DJ Class Name', enabled: true, regex: '\\bclass\\s+([a-zA-Z_][a-zA-Z0-9_]*)', flags: 'g', cls: 'type-dj', color: '#66D9EF', captureGroup: '1' },
+  { id: 'dj-function-call', name: 'DJ Function Names/Calls', enabled: true, regex: '([a-zA-Z_][a-zA-Z0-9_]*)\\s*\\(', flags: 'g', cls: 'func-dj', color: '#A6E22E', captureGroup: '1' },
+  { id: 'dj-keywords', name: 'DJ Keywords', enabled: true, regex: '\\b(and|as|assert|async|await|break|class|continue|def|del|elif|else|except|finally|for|from|global|if|import|in|is|lambda|nonlocal|not|or|pass|raise|return|try|while|with|yield)\\b', flags: 'g', cls: 'key-dj', color: '#F92672', captureGroup: '' }, // Color from key.dj in theme
+  { id: 'dj-sentence-caps', name: 'DJ Sentence Start Capitals', enabled: true, regex: '(?:^|[.!?]\\s+)([A-Z])', flags: 'g', cls: 'sent-dj', color: '#66D9EF', captureGroup: '1' }, // Color from sent.dj in theme
+  { id: 'dj-general-caps', name: 'DJ Capital Letters', enabled: true, regex: '([A-Z])', flags: 'g', cls: 'caps-dj', color: '#A6E22E', captureGroup: '1' }, // Color from caps.dj in theme
+  // Delimiters from sublime-syntax
+  { id: 'dj-delim-open', name: 'DJ Delimiters (Open)', enabled: true, regex: '\\(|\\{|\\[|\\"|«|<|_', flags: 'g', cls: 'delim-g-open-dj', color: '#E6AA74', captureGroup: '' },
+  { id: 'dj-delim-close', name: 'DJ Delimiters (Close)', enabled: true, regex: '\\)|\\}|\\]|\\"|»|>|_', flags: 'g', cls: 'delim-g-close-dj', color: '#FF0000', captureGroup: '' },
 ];
+
 
 const DEFAULT_SETTINGS: MyPluginSettings = {
   enableGlobalSyntaxHighlighting: true,
@@ -197,39 +203,86 @@ export default class MyPlugin extends Plugin {
 
   async loadSettings() {
     const loadedData = await (this as Plugin).loadData();
-    const baseSettings = JSON.parse(JSON.stringify(DEFAULT_SETTINGS)); // Fresh defaults
+    const baseSettings = JSON.parse(JSON.stringify(DEFAULT_SETTINGS)); // Fresh defaults based on new DEFAULT_PATTERNS
 
     if (loadedData) {
         this.settings = {
-            ...baseSettings, // Start with defaults
-            ...loadedData,    // Override with loaded data
+            ...baseSettings, // Start with new defaults
+            enableGlobalSyntaxHighlighting: loadedData.enableGlobalSyntaxHighlighting !== undefined 
+                                              ? loadedData.enableGlobalSyntaxHighlighting 
+                                              : baseSettings.enableGlobalSyntaxHighlighting,
+            // Custom patterns: merge new defaults with user's saved patterns
+            // Prioritize user's modifications to existing default patterns by ID.
+            // Add any new defaults that user doesn't have.
+            // Keep user's custom patterns.
+            customPatterns: [], // Will be populated below
         };
-        // Ensure customPatterns from loadedData is used if it exists, even if empty
-        if (loadedData.customPatterns !== undefined) {
-            this.settings.customPatterns = loadedData.customPatterns;
+
+        const loadedPatterns = loadedData.customPatterns || [];
+        const finalPatterns: CustomPatternConfig[] = [];
+        const loadedPatternIds = new Set(loadedPatterns.map((p: CustomPatternConfig) => p.id));
+        const defaultPatternIds = new Set(baseSettings.customPatterns.map((p: CustomPatternConfig) => p.id));
+
+        // 1. Add/update patterns based on new defaults
+        for (const defaultPattern of baseSettings.customPatterns) {
+            const userVersion = loadedPatterns.find((p: CustomPatternConfig) => p.id === defaultPattern.id);
+            if (userVersion) {
+                // User has a version of this default pattern, use theirs but ensure all fields are present
+                finalPatterns.push({
+                    ...defaultPattern, // provides structure and new fields if any
+                    ...userVersion,    // user's overrides
+                    name: userVersion.name || defaultPattern.name, // Ensure name is present
+                });
+            } else {
+                // User doesn't have this new default pattern, add it
+                finalPatterns.push(defaultPattern);
+            }
         }
+
+        // 2. Add user's custom patterns that are not part of the new defaults
+        for (const loadedPattern of loadedPatterns) {
+            if (!defaultPatternIds.has(loadedPattern.id)) {
+                // This is a purely custom pattern by the user, ensure it has all necessary fields
+                const scaffold = { name: `Custom Pattern`, enabled: true, regex: "", flags: "gm", cls: "custom-dj-highlight", color: "#FFFFFF", captureGroup: "" };
+                finalPatterns.push({
+                    id: loadedPattern.id || `pattern-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                    name: loadedPattern.name || scaffold.name,
+                    enabled: typeof loadedPattern.enabled === 'boolean' ? loadedPattern.enabled : scaffold.enabled,
+                    regex: loadedPattern.regex || scaffold.regex,
+                    flags: loadedPattern.flags || scaffold.flags,
+                    cls: loadedPattern.cls || scaffold.cls,
+                    color: loadedPattern.color || scaffold.color,
+                    captureGroup: loadedPattern.captureGroup || scaffold.captureGroup || ""
+                });
+            }
+        }
+        this.settings.customPatterns = finalPatterns;
+
     } else {
-        this.settings = baseSettings; // No saved data, use fresh defaults
+        this.settings = baseSettings; // No saved data, use fresh new defaults
     }
     
-    // Ensure customPatterns is always an array
-    if (!Array.isArray(this.settings.customPatterns)) {
-        this.settings.customPatterns = JSON.parse(JSON.stringify(DEFAULT_PATTERNS)); 
-    }
-    
-    // Ensure all patterns have necessary fields, providing defaults for missing ones
+    // Final sanitization pass to ensure all patterns have essential fields
+    // This is more robust than the previous scattered sanitization
     this.settings.customPatterns = this.settings.customPatterns.map((p: any, index: number) => {
-        const defaultPatternScaffold = DEFAULT_PATTERNS.find(dp => dp.id === p.id) || 
-                                     { name: `Pattern ${index + 1}`, enabled: true, regex: "", flags: "gm", cls: "custom-dj-highlight", color: "#FFFFFF", captureGroup: "" };
+        const defaultScaffold = { 
+            name: `Pattern ${index + 1}`, 
+            enabled: true, 
+            regex: "", 
+            flags: "gm", 
+            cls: "custom-dj-highlight", 
+            color: "#FFFFFF", 
+            captureGroup: "" 
+        };
         return {
             id: p.id || `pattern-${Date.now()}-${index}-${Math.random().toString(36).substr(2, 9)}`,
-            name: p.name || defaultPatternScaffold.name,
-            enabled: typeof p.enabled === 'boolean' ? p.enabled : defaultPatternScaffold.enabled,
-            regex: p.regex || defaultPatternScaffold.regex,
-            flags: p.flags || defaultPatternScaffold.flags,
-            cls: p.cls || defaultPatternScaffold.cls,
-            color: p.color || defaultPatternScaffold.color,
-            captureGroup: p.captureGroup || defaultPatternScaffold.captureGroup || ""
+            name: p.name || defaultScaffold.name,
+            enabled: typeof p.enabled === 'boolean' ? p.enabled : defaultScaffold.enabled,
+            regex: typeof p.regex === 'string' ? p.regex : defaultScaffold.regex,
+            flags: typeof p.flags === 'string' ? p.flags : defaultScaffold.flags,
+            cls: typeof p.cls === 'string' ? p.cls : defaultScaffold.cls,
+            color: typeof p.color === 'string' ? p.color : defaultScaffold.color,
+            captureGroup: typeof p.captureGroup === 'string' ? p.captureGroup : defaultScaffold.captureGroup
         };
     });
   }
