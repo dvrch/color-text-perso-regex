@@ -1,96 +1,130 @@
-# Svelte Syntax Highlighter Plugin for Obsidian
 
-## Description
+# Custom Syntax Highlighter for Obsidian
 
-This Obsidian plugin provides advanced syntax highlighting for files opened in your Obsidian vault, powered by Svelte. It enhances readability for various code and text formats by applying custom styling rules.
+**Author:** Your Name (from manifest.json)  
+**Version:** 1.1.0 (from manifest.json)  
+**Minimum Obsidian Version:** 1.0.0 (from manifest.json)  
+**Author URL:** https://example.com (from manifest.json)
+<!-- Optional: **Funding URL:** https://www.buymeacoffee.com/yourusername -->
+
+## Overview
+
+The Custom Syntax Highlighter plugin for Obsidian allows you to enhance your note-taking experience by defining custom regular expression-based syntax highlighting patterns. Tailor the appearance of your code blocks and text snippets with personalized colors, styles, and rules, drawing inspiration from flexible theming systems like those found in Sublime Text.
+
+This plugin provides a dedicated view pane to see your highlighting rules in action on the content of your currently active Markdown file, updating in real-time as you type or change settings.
 
 ## Features
 
-*   **Dynamic Syntax Highlighting**: Automatically highlights the content of the currently active file in the dedicated Syntax Highlighter view.
-*   **Customizable Styles**: Utilizes CSS classes for easy customization of highlighting colors and fonts.
-*   **Svelte Powered**: Built with Svelte 4 for efficient and reactive UI updates.
+*   **User-Defined Regex Patterns:** Create highlighting rules using JavaScript-flavored regular expressions.
+*   **Custom Colors:** Assign a unique color to each pattern.
+*   **Enable/Disable Patterns:** Easily toggle individual highlighting rules on or off.
+*   **Regex Flags:** Fine-tune regex behavior with flags like `g` (global), `m` (multiline), and `i` (case-insensitive) via an easy-to-use interface.
+*   **CSS Classes:** Assign custom CSS classes to matched text for advanced styling (e.g., bold, italic, backgrounds) via Obsidian snippets.
+*   **Capture Groups:** Highlight specific parts of your regex match using capture groups.
+*   **Default Patterns:** Comes with a set of pre-configured patterns inspired by Monokai/Korokai themes, covering common elements like comments, keywords, numbers, operators, and content within delimiters (strings, parentheses, etc.). These defaults can be modified, disabled, or deleted.
+*   **Live Settings UI:** Manage all your patterns through an intuitive settings panel within Obsidian.
+*   **Dedicated Preview Pane:** Open a "Syntax Highlighter" view to see a live preview of your highlighting rules applied to the current note's content.
 
 ## Installation
 
+### Via Community Plugins (Recommended)
+
+1.  Open Obsidian's **Settings**.
+2.  Navigate to **Community plugins**.
+3.  Ensure **Restricted mode** is **OFF**.
+4.  Click **Browse** to open the community plugins gallery.
+5.  Search for "Custom Syntax Highlighter".
+6.  Click **Install** on the plugin.
+7.  Once installed, click **Enable**.
+
 ### Manual Installation
 
-Since this plugin is currently under development (or not yet officially released on the Obsidian community plugins list), you need to install it manually:
-
-1.  **Download the latest release**: Go to the [Releases page (link to your GitHub releases page once available) or download the latest `main.js`, `manifest.json`, and `styles.css` files directly from this repository](https://github.com/dvrch/obsidian-sample-plugin/releases/latest). If you're building from source, you'll need the entire repository.
-2.  **Locate your Obsidian Vault**: Open Obsidian and navigate to `Settings` -> `About` -> `Open vault folder`. This will open your vault's root directory.
-3.  **Navigate to the plugins folder**: Inside your vault's folder, go to `.obsidian/plugins/`.
-4.  **Create a new folder**: Create a new folder named `svelte-syntax-highlighter` (or any other descriptive name for the plugin).
-5.  **Copy plugin files**: Copy the `main.js`, `manifest.json`, and `styles.css` files (and any other necessary assets from the release) into the newly created `svelte-syntax-highlighter` folder.
-6.  **Enable the plugin**: Restart Obsidian. Go to `Settings` -> `Community plugins`. Under `Installed plugins`, toggle on `Svelte Syntax Highlighter`.
+1.  Download the `main.js` and `manifest.json` files from the latest [Release](https.github.com/your-repo-url/releases/latest) (replace with your actual GitHub repo URL if you create one).
+2.  In your Obsidian vault, navigate to the `.obsidian/plugins/` directory.
+3.  Create a new folder named `obsidian-custom-syntax-highlighter` (or the ID from `manifest.json`).
+4.  Copy the downloaded `main.js` and `manifest.json` files into this new folder.
+5.  Reload Obsidian (Ctrl/Cmd+R or close and reopen).
+6.  Go to **Settings** -> **Community plugins** and enable "Custom Syntax Highlighter" from the list of installed plugins.
 
 ## Usage
 
-1.  **Open the Syntax Highlighter View**: Once the plugin is enabled, you can open the dedicated syntax highlighting view by:
-    *   Clicking the **dice icon** in the left ribbon (if enabled).
-    *   Using the command palette (`Ctrl/Cmd + P`) and searching for "**Open Syntax Highlighter View**".
-2.  **View Highlighted Content**: As you open different files (e.g., Markdown, code files) in your Obsidian workspace, the content of the active file will automatically be displayed with syntax highlighting in the Syntax Highlighter view.
+### Opening the Syntax Highlighter View
 
-## Development
+*   **Ribbon Icon:** Click the highlighter icon in Obsidian's left ribbon.
+*   **Command Palette:** Open the command palette (Ctrl/Cmd+P) and search for "Open Syntax Highlighter View".
 
-If you wish to contribute to the plugin or build it from source, follow these steps:
+This view will display the content of your currently active Markdown file, with your custom syntax highlighting rules applied. It updates automatically as you edit the file or modify highlighting settings.
 
-### Prerequisites
+### Accessing Settings
 
-*   Node.js (LTS version recommended)
-*   pnpm (a fast, disk-space efficient package manager)
+1.  Open Obsidian's **Settings**.
+2.  Go to **Community Plugins** in the sidebar.
+3.  Find "Custom Syntax Highlighter" in the list of installed plugins.
+4.  Click the **Options** (gear) icon next to it.
 
-    ```bash
-    npm install -g pnpm
-    ```
+### Managing Highlighting Patterns
 
-### Getting Started
+The settings panel allows you to configure all aspects of your syntax highlighting:
 
-1.  **Clone the repository**:
+*   **Enable Global Syntax Highlighting:** A master switch to turn all custom highlighting on or off.
 
-    ```bash
-    git clone https://github.com/dvrch/obsidian-sample-plugin.git
-    cd obsidian-sample-plugin
-    ```
+*   **Highlighting Patterns List:** Each pattern is managed in its own collapsible section.
+    *   **Pattern Name:** A descriptive name for your rule (e.g., "Python Keywords", "TODO Comments"). This is for your reference in the settings.
+    *   **Enabled Checkbox:** Toggle this specific pattern on or off.
+    *   **Regex:** The core of your rule. Enter a JavaScript-compatible regular expression here.
+        *   *Do not include* the leading and trailing slashes (`/`). For example, for `/\b(TODO|FIXME)\b/gm`, you would enter `\b(TODO|FIXME)\b`.
+    *   **Flags:**
+        *   **g (Global):** Finds all matches in the text, not just the first one. Almost always recommended.
+        *   **m (Multiline):** When enabled, `^` and `$` will match the start and end of a line, respectively (respecting newlines), in addition to the start and end of the whole string.
+        *   **i (Case-Insensitive):** Makes the regex match both uppercase and lowercase letters.
+    *   **CSS Class:** (Optional) Assign a custom CSS class name to the matched text. This allows for more advanced styling (like `font-weight: bold;` or `font-style: italic;`) by defining this class in your Obsidian CSS snippets. For example, if you enter `my-keyword`, you can add `.my-keyword { font-weight: bold; }` to your `obsidian.css` or a custom snippet file.
+    *   **Color:** Choose the text color for the highlighted match using a color picker. This is applied directly as an inline style.
+    *   **Capture Group:** (Optional) If your regex uses capturing groups (e.g., `(text)`), you can specify which group's content should be highlighted.
+        *   Enter a number (e.g., `1`, `2`).
+        *   If left blank, `0`, or an invalid number, the entire match (group 0) is highlighted.
+        *   Example: For regex `(class)\s+([A-Za-z_]+)` and capture group `2`, only the class name (e.g., `MyClass`) would be highlighted, not "class MyClass".
+    *   **Delete Pattern:** Click the "×" button to remove a pattern.
 
-2.  **Install dependencies**:
+*   **+ Add New Pattern:** Click this button to create a new, empty pattern configuration block.
 
-    ```bash
-    pnpm install
-    ```
+### Default Patterns
 
-3.  **Build the plugin** (for production):
+The plugin includes several default patterns based on common syntax elements (comments, keywords, numbers, operators, strings/content in delimiters). You are free to:
+*   Disable them if they conflict with your needs.
+*   Modify their regex, color, or other properties.
+*   Delete them entirely.
 
-    ```bash
-    pnpm run build
-    ```
+### Understanding Overlaps & Priority
 
-    This will compile `main.ts` and `SyntaxHighlighter.svelte` into `main.js`, `manifest.json`, and `styles.css`.
+The highlighting engine processes your patterns and applies them to the text.
+1.  All enabled patterns are used to find matches in the text.
+2.  Matches are sorted primarily by their starting position in the text.
+3.  If multiple matches start at the same position, the longer match takes precedence.
+4.  The plugin then applies these sorted, non-overlapping matches. This means if one pattern highlights "function foo()", another pattern that only matches "foo" within that segment might not be applied if the broader "function foo()" match is processed first.
 
-4.  **Run in development mode** (with auto-rebuild on changes):
+Content within delimiters (e.g., text inside quotes defined by `dj-content-in-double-quotes`) will be styled with its own color, and the delimiters themselves (e.g., the quotes, styled by `dj-delim-open`/`dj-delim-close`) will also be styled according to their patterns.
 
-    ```bash
-    pnpm run dev
-    ```
+## Troubleshooting & Notes
 
-    While `pnpm run dev` is running, any changes you make to the source files will automatically trigger a rebuild, making development faster.
+*   **Invalid Regex:** If a regex pattern is invalid, it will be ignored, and a warning may appear in Obsidian's developer console (View -> Toggle Developer Tools).
+*   **Instant Updates:** Changes made in the settings panel should reflect immediately in the "Syntax Highlighter" view pane if it's open. The highlighting in actual editor panes for Markdown code blocks is typically handled by Obsidian's built-in Prism.js or CodeMirror and is not directly modified by this plugin's preview specific highlighting. This plugin primarily provides a *customizable preview* and the ability to define styles that *could* be used more broadly with custom CSS.
+*   **Advanced Styling (Bold, Italic, etc.):** For styles beyond simple text color (e.g., bold, italic, background colors), use the "CSS Class" field for a pattern. Then, define that CSS class in your Obsidian snippets file. You can create/edit snippets via **Settings -> Appearance -> CSS snippets**.
+    *   Example:
+        *   In plugin settings for a pattern: `CSS Class: important-keyword`
+        *   In your `Vault/.obsidian/snippets/custom-styles.css` (enable the snippet in Appearance settings):
+            ```css
+            .important-keyword {
+              font-weight: bold;
+              background-color: yellow;
+            }
+            ```
+*   **Performance:** While generally efficient, an extremely large number of complex regex patterns on very large files could potentially impact performance. If you notice slowdowns, try disabling some less-used or complex patterns.
 
-### Troubleshooting
+## Feedback and Contributions
 
-If you encounter issues like "Cannot use import statement outside a module" or similar bundling problems:
+If you have feedback, find a bug, or want to contribute, please visit the plugin's GitHub repository (if/when available).
+<!-- Example: [GitHub Repository](https://github.com/your-username/obsidian-custom-syntax-highlighter) -->
 
-1.  **Ensure all dependencies are correctly installed and up-to-date**: Run `pnpm install` after pulling new changes or modifying `package.json`.
-2.  **Clean build**: Sometimes a fresh build can resolve issues. Delete `node_modules` and `pnpm-lock.yaml`, then run `pnpm install` followed by `pnpm run build`.
-3.  **Check `package.json` for correct versions**: Ensure `esbuild`, `esbuild-svelte`, and `esbuild-plugin-obsidian` are using the correct, available versions.
-4.  **Verify `tsconfig.json` and `esbuild.config.mjs`**: Ensure `verbatimModuleSyntax` is `true` in `tsconfig.json` and that Svelte's `format` option is not set in `esbuild.config.mjs`.
+---
 
-## Contributing
-
-Feel free to open issues or submit pull requests. All contributions are welcome!
-
-## License
-
-This plugin is licensed under the MIT License. See the `LICENSE` file for more details.
-
-c est OK, ais affiche genre code source 
-En plus il faut faire des allés-retoure : 1ere fois c est vide, il faut aller ailleur puis revenir dessus pour que  ça apparait 
-je ne comprend pas pourquoi ça affiche les coloratioon en dupliquant dasn un autre onglet | je veut que la coloration se fasse sur le fichier dans son ongle | je ne comprends pas pourquoi les point `.` sont multipliés par 3 , aisi que les 1ers lettre majuscule qui vienne apres ce point|  en activant la coloration, elle ne prends pas effet tout de suite. il faut cliquer a l exterieur de l onglet pour voir le changement? (je souhaite donc que ce soit interactif et directement sur  le fichier dan sson onglet sans changer ou creer un outre pour; mais que la coloration ne surcharge pas le texte avec des balises, mais que le  les carrcteres ne varien pas, mais il y ait comme un cript qui vienne amenager le coleur comme voulu? | je aouhaite aussi dans les setting du plug qu∈l utilisateur _activer le plug  qui prend directement effet  _lutilisateur puisse definir les pattern regex et couleur associés, avec pour base la configuration egex-couleur actueles
+This README is designed to be a comprehensive guide. Adjust any placeholders like "Your Name" or repository URLs as needed.

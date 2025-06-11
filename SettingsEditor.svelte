@@ -1,17 +1,12 @@
-
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import type { MyPluginSettings, CustomPatternConfig } from './main';
 
   export let settings: MyPluginSettings;
-  // The onSettingsChange prop is implicitly handled by Svelte's reactivity
-  // when bind:value is used and the parent component listens for changes.
-  // However, explicit dispatching is good practice for complex objects or immediate feedback.
 
   const dispatch = createEventDispatcher<{ updateSettings: MyPluginSettings }>();
 
   function notifyChange() {
-    // This function ensures that any change triggers an update to the plugin's core settings.
     dispatch('updateSettings', settings);
   }
 
@@ -21,9 +16,9 @@
       name: `New Pattern ${settings.customPatterns.length + 1}`,
       enabled: true,
       regex: "",
-      flags: "gm",
+      flags: "gm", // Default to gm
       cls: "custom-dj-highlight",
-      color: "#FFFFFF", // Default to white, user can change
+      color: "#F00FFF", 
       captureGroup: ""
     };
     settings.customPatterns = [...settings.customPatterns, newPattern];
@@ -35,10 +30,36 @@
     notifyChange();
   }
 
+  function updateFlag(patternIndex: number, flagChar: 'g' | 'm' | 'i', isChecked: boolean) {
+    const pattern = settings.customPatterns[patternIndex];
+    if (!pattern) return;
+
+    let currentFlags = pattern.flags || "";
+    let flagsArray = currentFlags.split('');
+
+    if (isChecked) {
+      if (!flagsArray.includes(flagChar)) {
+        flagsArray.push(flagChar);
+      }
+    } else {
+      flagsArray = flagsArray.filter(f => f !== flagChar);
+    }
+    
+    // Reconstruct in a consistent order (g, m, i), though regex engine doesn't mind order
+    const orderedFlags: ('g'|'m'|'i')[] = [];
+    if (flagsArray.includes('g')) orderedFlags.push('g');
+    if (flagsArray.includes('m')) orderedFlags.push('m');
+    if (flagsArray.includes('i')) orderedFlags.push('i');
+    
+    pattern.flags = orderedFlags.join('');
+    // console.log(`Pattern ${pattern.name} flags updated to: ${pattern.flags}`);
+    notifyChange();
+  }
+
   // Ensure settings.customPatterns is always an array
   if (!Array.isArray(settings.customPatterns)) {
     settings.customPatterns = [];
-    notifyChange(); // if it was somehow not an array, fix and notify
+    notifyChange(); 
   }
 </script>
 
@@ -58,7 +79,7 @@
 
   <h3 class="patterns-heading">Highlighting Patterns</h3>
   
-  {#each settings.customPatterns as pattern (pattern.id)}
+  {#each settings.customPatterns as pattern, i (pattern.id)}
     <div class="pattern-editor-item" role="group" aria-labelledby={`pattern-name-${pattern.id}`}>
       <div class="pattern-header">
         <input 
@@ -102,17 +123,37 @@
             aria-label="Regular expression for pattern {pattern.name}"
           />
         </div>
+        
         <div class="pattern-field">
           <label for={`flags-${pattern.id}`}>Flags</label>
-          <input 
-            id={`flags-${pattern.id}`} 
-            type="text" 
-            placeholder="e.g., gm" 
-            bind:value={pattern.flags} 
-            on:input={notifyChange}
-            aria-label="Regex flags for pattern {pattern.name}"
-          />
+          <div id={`flags-${pattern.id}`} class="flags-group" role="group" aria-label="Regex flags for pattern {pattern.name}">
+            <label class="flag-checkbox">
+              <input 
+                type="checkbox" 
+                checked={pattern.flags?.includes('g')} 
+                on:change={(e) => updateFlag(i, 'g', e.currentTarget.checked)}
+                aria-label="Global flag (g)"
+              /> g
+            </label>
+            <label class="flag-checkbox">
+              <input 
+                type="checkbox" 
+                checked={pattern.flags?.includes('m')} 
+                on:change={(e) => updateFlag(i, 'm', e.currentTarget.checked)}
+                aria-label="Multiline flag (m)"
+              /> m
+            </label>
+            <label class="flag-checkbox">
+              <input 
+                type="checkbox" 
+                checked={pattern.flags?.includes('i')} 
+                on:change={(e) => updateFlag(i, 'i', e.currentTarget.checked)}
+                aria-label="Case-insensitive flag (i)"
+              /> i
+            </label>
+          </div>
         </div>
+
         <div class="pattern-field">
           <label for={`cls-${pattern.id}`}>CSS Class</label>
           <input 
@@ -157,7 +198,7 @@
 
 <style>
   .settings-container-dj {
-    padding: 5px; /* Reduced padding for overall container */
+    padding: 5px; 
     max-width: 100%;
     box-sizing: border-box;
   }
@@ -178,7 +219,7 @@
   }
   
   .global-toggle input[type="checkbox"] {
-    transform: scale(1.1); /* Slightly larger checkbox */
+    transform: scale(1.1);
   }
 
   .patterns-heading {
@@ -191,8 +232,8 @@
   .pattern-editor-item {
     border: 1px solid var(--background-modifier-border);
     border-radius: var(--radius-m);
-    padding: 10px; /* Reduced padding */
-    margin-bottom: 12px; /* Reduced margin */
+    padding: 10px; 
+    margin-bottom: 12px; 
     background-color: var(--background-secondary);
     box-shadow: 0 1px 2px rgba(0,0,0,0.05);
   }
@@ -201,17 +242,17 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 8px; /* Reduced margin */
+    margin-bottom: 8px; 
   }
 
   .pattern-name-input {
     flex-grow: 1;
     font-size: var(--font-ui-medium);
     font-weight: 500;
-    padding: 6px 8px; /* Compact padding */
+    padding: 6px 8px; 
     border: 1px solid var(--background-modifier-border);
     border-radius: var(--radius-s);
-    background-color: var(--background-primary); /* Match theme */
+    background-color: var(--background-primary); 
     color: var(--text-normal);
   }
   .pattern-name-input:focus {
@@ -222,14 +263,14 @@
   .pattern-controls {
     display: flex;
     align-items: center;
-    gap: 8px; /* Reduced gap */
-    margin-left: 10px; /* Space from name input */
+    gap: 8px; 
+    margin-left: 10px; 
   }
 
   .enabled-toggle {
     display: flex;
     align-items: center;
-    gap: 4px; /* Reduced gap */
+    gap: 4px; 
     font-size: var(--font-ui-small);
     color: var(--text-muted);
     cursor: pointer;
@@ -243,9 +284,9 @@
     background: none;
     border: none;
     color: var(--text-muted);
-    font-size: 1.4em; /* Slightly larger for easier click */
+    font-size: 1.4em; 
     cursor: pointer;
-    padding: 0 5px; /* Minimal padding */
+    padding: 0 5px; 
     line-height: 1;
   }
   .delete-button:hover {
@@ -254,10 +295,9 @@
 
   .pattern-grid {
     display: grid;
-    /* Autofit columns, try to make them at least 150px, but allow flexibility */
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 8px 10px; /* Reduced gap */
-    align-items: end; /* Align form elements nicely if they have different heights */
+    gap: 8px 10px; 
+    align-items: end; 
   }
 
   .pattern-field {
@@ -267,7 +307,7 @@
   
   .pattern-field label {
     font-size: var(--font-ui-smaller);
-    margin-bottom: 3px; /* Reduced margin */
+    margin-bottom: 3px; 
     color: var(--text-muted);
     font-weight: 500;
   }
@@ -275,18 +315,18 @@
   .pattern-field input[type="text"],
   .pattern-field input[type="color"] {
     width: 100%;
-    padding: 6px 8px; /* Compact padding */
+    padding: 6px 8px; 
     border: 1px solid var(--background-modifier-border);
     border-radius: var(--radius-s);
     background-color: var(--background-primary);
     color: var(--text-normal);
     font-size: var(--font-ui-small);
-    box-sizing: border-box; /* Important for 100% width with padding */
+    box-sizing: border-box; 
   }
   
   .pattern-field input[type="color"] {
-    padding: 4px; /* Color inputs often need less vertical padding */
-    min-height: 30px; /* Ensure color input is not too small */
+    padding: 4px; 
+    min-height: 30px; 
   }
 
   .pattern-field input:focus {
@@ -294,13 +334,32 @@
      box-shadow: 0 0 0 1px var(--interactive-accent);
   }
   
-  /* Make capture group field potentially smaller if needed, or let grid handle it */
-  /* .capture-group-field { max-width: 120px; } */
+  .flags-group {
+    display: flex;
+    gap: 10px; /* Space between flag checkboxes */
+    align-items: center;
+    padding: 6px 0; /* Align with other input fields vertically */
+     min-height: 30px; /* Match height of other inputs */
+    box-sizing: border-box;
+  }
+
+  .flag-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 4px; /* Space between checkbox and its label (g, m, i) */
+    font-size: var(--font-ui-small);
+    color: var(--text-normal);
+    cursor: pointer;
+  }
+  .flag-checkbox input[type="checkbox"] {
+    margin: 0;
+    transform: scale(0.9);
+  }
 
   .add-pattern-button {
-    margin-top: 15px; /* Space above button */
-    padding: 8px 15px; /* Standard button padding */
-    font-size: var(--font-ui-small); /* Consistent font size */
+    margin-top: 15px; 
+    padding: 8px 15px; 
+    font-size: var(--font-ui-small); 
     background-color: var(--interactive-accent);
     color: var(--text-on-accent);
     border: none;
@@ -312,7 +371,6 @@
     background-color: var(--interactive-accent-hover);
   }
 
-  /* Accessibility improvements */
   input:focus-visible, button:focus-visible {
     outline: 2px solid var(--interactive-accent);
     outline-offset: 1px;
