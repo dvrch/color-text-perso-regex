@@ -1,25 +1,15 @@
 
+
 <script lang="ts">
   import type { CustomPatternConfig } from './main'; // Import the interface
 
   export let content: string = "";
-  export let customPatterns: CustomPatternConfig[] = [];
+  export let customPatterns: CustomPatternConfig[] = []; // This will now include default and user patterns
   export let enableGlobalSyntaxHighlighting: boolean = true;
 
   let highlighted: string = "";
 
-  // Built-in patterns (can be kept as a base)
-  const builtInPatterns = [
-    { regex: /#.*$/gm, cls: "comm-dj" },
-    { regex: /\b(?:0[xX][0-9a-fA-F]+|0[oO][0-7]+|0[bB][01]+|[0-9]+\.[0-9]*(?:[eE][+-]?[0-9]+)?|[0-9]+)\b/g, cls: "num-dj" },
-    { regex: /[\+\-\*\/]|\/\/|\\|%|@|<<|>>|&|\^|~|<|>|<=|>=|==|!=|:=|=/g, cls: "op-dj" },
-    { regex: /[.,;:?!|µ]/g, cls: "ponct-dj" },
-    { regex: /\bclass\s+([a-zA-Z_][a-zA-Z0-9_]*)/g, cls: "type-dj", captureGroup: 1 },
-    { regex: /[a-zA-Z_][a-zA-Z0-9_]*\s*\(/g, cls: "func-dj" },
-    { regex: /\b(and|as|assert|async|await|break|class|continue|def|del|elif|else|except|finally|for|from|global|if|import|in|is|lambda|nonlocal|not|or|pass|raise|return|try|while|with|yield)\b/g, cls: "key-dj" },
-    { regex: /(?:^|[.!?]\s+)([A-Z])/g, cls: "sent-dj", captureGroup: 1 },
-    { regex: /([A-Z])/g, cls: "caps-dj", captureGroup: 1 }
-  ];
+  // builtInPatterns array is removed. All patterns come from the customPatterns prop.
 
   function escapeHtml(str: string | undefined | null): string {
     if (str === undefined || str === null) return "";
@@ -39,7 +29,7 @@
     text: string;
     cls?: string;
     style?: string;
-    priority: number; // For sorting: custom patterns might have higher priority
+    // priority: number; // Priority can be removed if all patterns are treated equally based on sort order
   }
   
   function highlightContent(text: string, localCustomPatterns: CustomPatternConfig[], globalEnable: boolean): string {
@@ -48,63 +38,49 @@
     let result = "";
     let lastIndex = 0;
     const allMatches: Match[] = [];
-
-    // Process built-in patterns
-    builtInPatterns.forEach(pattern => {
-      const regex = new RegExp(pattern.regex.source, 'g' + pattern.regex.flags.replace('g', ''));
-      let match;
-      while ((match = regex.exec(text)) !== null) {
-        const captureGroupIndex = typeof pattern.captureGroup === 'string' ? parseInt(pattern.captureGroup,10) : pattern.captureGroup;
-        const capturedText = captureGroupIndex !== undefined && !isNaN(captureGroupIndex) && match[captureGroupIndex] !== undefined ? match[captureGroupIndex] : match[0];
-        const start = match.index + (match[0].indexOf(capturedText));
-        const end = start + capturedText.length;
-        if (capturedText.length === 0) continue; // Skip empty matches
-
-        allMatches.push({
-          start: start,
-          end: end,
-          text: capturedText,
-          cls: pattern.cls,
-          priority: 1 // Lower priority for built-in
-        });
-      }
-    });
     
-    // Process custom patterns
+    // Process all patterns from localCustomPatterns (which now includes defaults)
     if (localCustomPatterns) {
-      localCustomPatterns.forEach(customPattern => {
-        if (!customPattern.enabled || !customPattern.regex) return;
+      localCustomPatterns.forEach(patternConfig => {
+        if (!patternConfig.enabled || !patternConfig.regex) return;
         try {
-          const regex = new RegExp(customPattern.regex, customPattern.flags || 'g');
+          const regex = new RegExp(patternConfig.regex, patternConfig.flags || 'g');
           let match;
           while ((match = regex.exec(text)) !== null) {
-            const captureGroupIndex = customPattern.captureGroup ? parseInt(customPattern.captureGroup, 10) : undefined;
+            const captureGroupIndex = patternConfig.captureGroup ? parseInt(patternConfig.captureGroup, 10) : undefined;
+            // Ensure match[0] exists and is not empty before trying to access indexOf
+            if (match[0] === undefined || match[0].length === 0) continue;
+
             const capturedText = captureGroupIndex !== undefined && !isNaN(captureGroupIndex) && match[captureGroupIndex] !== undefined ? match[captureGroupIndex] : match[0];
             
-            if (capturedText === undefined || capturedText.length === 0) continue; // Skip empty or undefined matches
+            // If capturedText (even after falling back to match[0]) is undefined or empty, skip this match.
+            // This can happen if a capture group exists but captures an empty string, or if regex itself is problematic.
+            if (capturedText === undefined || capturedText.length === 0) continue; 
 
-            const start = match.index + (match[0].indexOf(capturedText));
+            const start = match.index + (match[0].indexOf(capturedText)); // indexOf could be -1 if capturedText is not part of match[0] (should not happen with valid CG)
+            if (start < match.index) continue; // Safety check if indexOf returned -1 and caused an issue.
+
             const end = start + capturedText.length;
 
             allMatches.push({
               start: start,
               end: end,
               text: capturedText,
-              cls: customPattern.cls || 'custom-highlight',
-              style: customPattern.color ? `color: ${customPattern.color};` : '',
-              priority: 2 // Higher priority for custom
+              cls: patternConfig.cls || 'custom-highlight',
+              style: patternConfig.color ? `color: ${patternConfig.color};` : ''
+              // priority: 2 // Or remove priority if not differentiating anymore
             });
           }
         } catch (e) {
-          console.warn(`SyntaxHighlighter: Invalid regex for custom pattern "${customPattern.regex}":`, e);
+          console.warn(`SyntaxHighlighter: Invalid regex for pattern "${patternConfig.name || patternConfig.regex}":`, e);
         }
       });
     }
 
-    // Sort matches: by start index, then by priority (custom over built-in), then by end index (longer matches first if at same start)
+    // Sort matches: by start index, then by end index (longer matches first if at same start)
     allMatches.sort((a, b) => {
       if (a.start !== b.start) return a.start - b.start;
-      if (a.priority !== b.priority) return b.priority - a.priority; // Higher priority first
+      // If priorities were kept, sort by b.priority - a.priority here
       return b.end - a.end; // Longer match first
     });
     
@@ -116,8 +92,6 @@
         nonOverlappingMatches.push(match);
         currentCoverageEnd = match.end;
       }
-      // Simple overlap handling: if a higher priority or longer match starts at the same point, it would have been sorted earlier.
-      // This greedy approach takes the first valid match. More complex scenarios might need refinement.
     }
 
     for (const match of nonOverlappingMatches) {
@@ -154,26 +128,36 @@
     padding: 1em;
     border-radius: var(--radius-m, 4px);
     overflow-x: auto;
-    white-space: pre-wrap; /* Allows wrapping and preserves spaces/tabs */
-    word-wrap: break-word; /* Break long words to prevent overflow */
+    white-space: pre-wrap; 
+    word-wrap: break-word; 
     line-height: 1.6;
     font-size: var(--font-ui-small, 0.9em);
   }
 
-  /* Default syntax highlighting styles (for built-in patterns or custom patterns without specific colors) */
+  /* Default syntax highlighting styles (for patterns using these classes) */
+  /* These can be overridden by inline styles from pattern.color */
   :global(.key-dj) { color: #F92672; font-weight: bold; }
   :global(.func-dj) { color: #A6E22E; }
-  :global(.comm-dj) { color: #75715E; font-style: italic; } /* Adjusted for better visibility on dark themes */
+  :global(.comm-dj) { color: #75715E; font-style: italic; } /* Adjusted to Monokai comment color */
   :global(.type-dj) { color: #66D9EF; font-style: italic; }
-  :global(.op-dj) { color: #FD971F; } /* Orange for operators */
+  :global(.op-dj) { color: #F92672; } /* Monokai operator color */
   :global(.num-dj) { color: #AE81FF; }
-  :global(.ponct-dj) { color: var(--text-muted); } /* More subtle punctuation */
-  :global(.sent-dj) { color: #E6DB74; } /* Yellow for sentences/strings often */
-  :global(.caps-dj) { color: #A6E22E; }
+  :global(.ponct-dj) { color: var(--text-muted); } /* Defaulting to muted, can be overridden */
+  :global(.sent-dj) { color: #E6DB74; } /* Monokai string/char color, good for sentences */
+  :global(.caps-dj) { color: #A6E22E; } /* Reusing function color for emphasis */
+  
+  :global(.delim-g-open-dj) { /* color specified by pattern */ }
+  :global(.delim-g-close-dj) { /* color specified by pattern */ }
+  :global(.cont-dj) { /* color specified by pattern, e.g. #E6DB74 */ }
+
 
   /* Generic class for custom highlights if no specific class is given by user, or as a fallback */
   :global(.custom-highlight) {
     /* Base style, color will be overridden by inline style if provided */
+  }
+   /* Default class for newly added patterns if user doesn't specify one */
+  :global(.custom-dj-highlight) {
+    /* Can have a default appearance or be styled by inline color */
   }
 
   :global(.error-dj) {
