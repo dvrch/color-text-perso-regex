@@ -1,232 +1,275 @@
+
 import { App, Editor, MarkdownView, Modal, /* Notice, */ Plugin, PluginSettingTab, Setting, ItemView, WorkspaceLeaf, type PluginManifest, type MarkdownFileInfo } from 'obsidian';
-import SyntaxHighlighter from './SyntaxHighlighter.svelte';
+import SyntaxHighlighterSvelte from './SyntaxHighlighter.svelte';
+import SettingsEditorSvelte from './SettingsEditor.svelte'; // New Svelte component for settings
 import { mount, unmount } from './svelte-utils';
 
-// Remember to rename these classes and interfaces!
+// Interfaces for settings
+export interface CustomPatternConfig {
+  id: string;
+  enabled: boolean;
+  regex: string;
+  flags: string;
+  cls: string;
+  color: string;
+  captureGroup?: string;
+}
 
-interface MyPluginSettings {
-	mySetting: string;
+export interface MyPluginSettings {
+  enableGlobalSyntaxHighlighting: boolean;
+  customPatterns: CustomPatternConfig[];
+  // mySetting: string; // This can be removed if no longer needed, or kept for other purposes
 }
 
 const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default'
-}
+  enableGlobalSyntaxHighlighting: true,
+  customPatterns: [
+    // Example default custom pattern (optional)
+    // {
+    //   id: 'default-example-1',
+    //   enabled: true,
+    //   regex: "\\bIMPORTANT\\b",
+    //   flags: "g",
+    //   cls: "custom-important",
+    //   color: "#FFBF00",
+    //   captureGroup: ""
+    // }
+  ],
+  // mySetting: 'default'
+};
 
 export const VIEW_TYPE_SYNTAX = 'syntax-highlighter-view';
-export const VIEW_TYPE_EXAMPLE = 'example-view';
+// export const VIEW_TYPE_EXAMPLE = 'example-view'; // Not used in current context
 
 export class SyntaxHighlighterView extends ItemView {
-	highlighter: SyntaxHighlighter | undefined;
-	content: string = '';
+  private svelteComponent: SyntaxHighlighterSvelte | undefined;
+  private currentContent: string = '';
+  private currentSettings: MyPluginSettings;
 
-	constructor(leaf: WorkspaceLeaf) {
-		super(leaf);
-	}
+  constructor(leaf: WorkspaceLeaf, settings: MyPluginSettings) {
+    super(leaf);
+    this.currentSettings = settings;
+  }
 
-	getViewType() {
-		return VIEW_TYPE_SYNTAX;
-	}
+  getViewType() {
+    return VIEW_TYPE_SYNTAX;
+  }
 
-	getDisplayText() {
-		return 'Syntax Highlighter';
-	}
+  getDisplayText() {
+    return 'Syntax Highlighter';
+  }
 
-	async onOpen() {
-		// Read content of the active file and pass it to the Svelte component on open
-		const activeFile = this.app.workspace.getActiveFile();
-		if (activeFile) {
-			this.content = await this.app.vault.read(activeFile);
-		}
+  async onOpen() {
+    const activeFile = (this as ItemView).app.workspace.getActiveFile();
+    if (activeFile) {
+      this.currentContent = await (this as ItemView).app.vault.read(activeFile);
+    }
 
-		this.highlighter = mount(SyntaxHighlighter, {
-			target: this.contentEl,
-			props: {
-				content: this.content
-			}
-		});
-	}
+    (this as ItemView).contentEl.empty(); // Clear contentEl before mounting
+    this.svelteComponent = mount(SyntaxHighlighterSvelte, {
+      target: (this as ItemView).contentEl,
+      props: {
+        content: this.currentContent,
+        customPatterns: this.currentSettings.customPatterns,
+        enableGlobalSyntaxHighlighting: this.currentSettings.enableGlobalSyntaxHighlighting,
+      }
+    });
+  }
 
-	async onClose() {
-		if (this.highlighter) {
-			unmount(this.highlighter);
-		}
-	}
+  async onClose() {
+    if (this.svelteComponent) {
+      unmount(this.svelteComponent);
+      this.svelteComponent = undefined;
+    }
+  }
 
-	async updateContent(newContent: string) {
-		this.content = newContent;
-		if (this.highlighter) {
-			this.highlighter.$set({ content: newContent });
-		}
-	}
+  async updateContent(newContent: string) {
+    this.currentContent = newContent;
+    if (this.svelteComponent) {
+      this.svelteComponent.$set({ content: newContent });
+    }
+  }
+
+  updateSettings(newSettings: MyPluginSettings) {
+    this.currentSettings = newSettings;
+    if (this.svelteComponent) {
+      this.svelteComponent.$set({
+        customPatterns: newSettings.customPatterns,
+        enableGlobalSyntaxHighlighting: newSettings.enableGlobalSyntaxHighlighting,
+      });
+    }
+  }
 }
 
 export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+  settings: MyPluginSettings;
 
-	constructor(app: App, manifest: PluginManifest) {
-		super(app, manifest);
-		this.settings = DEFAULT_SETTINGS;
-	}
+  constructor(app: App, manifest: PluginManifest) {
+    super(app, manifest);
+    // Initialize with a default-like structure, loadSettings will overwrite
+    this.settings = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
+  }
 
-	async onload() {
-		await this.loadSettings();
+  async onload() {
+    await this.loadSettings();
 
-		// This creates an icon in the left ribbon.
-		const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (evt: MouseEvent) => {
-			this.app.workspace.getLeaf(true).setViewState({
-				type: VIEW_TYPE_SYNTAX,
-				active: true,
-			});
-		});
-		// Perform additional things with the ribbon
-		ribbonIconEl.addClass('my-plugin-ribbon-class');
+    (this as Plugin).registerView(
+      VIEW_TYPE_SYNTAX,
+      (leaf) => new SyntaxHighlighterView(leaf, this.settings)
+    );
 
-		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('Status Bar Text');
+    const ribbonIconEl = (this as Plugin).addRibbonIcon('highlighter', 'Open Syntax Highlighter View', (evt: MouseEvent) => {
+      this.activateView();
+    });
+    ribbonIconEl.addClass('my-plugin-ribbon-class');
 
-		// This adds a simple command that can be triggered anywhere
-		this.addCommand({
-			id: 'open-sample-modal-simple',
-			name: 'Open sample modal (simple)',
-			callback: () => {
-				new SampleModal(this.app).open();
-			}
-		});
-		// This adds an editor command that can perform some operation on the current editor instance
-		this.addCommand({
-			id: 'sample-editor-command',
-			name: 'Sample editor command',
-			editorCallback: (editor: Editor, view: MarkdownView | MarkdownFileInfo) => {
-				console.log(editor.getSelection());
-				editor.replaceSelection('Sample Editor Command');
-			}
-		});
-		// This adds a complex command that can check whether the current state of the app allows execution of the command
-		this.addCommand({
-			id: 'open-sample-modal-complex',
-			name: 'Open sample modal (complex)',
-			checkCallback: (checking: boolean) => {
-				// Conditions to check
-				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-				if (markdownView) {
-					// If checking is true, we're simply "checking" if the command can be run.
-					// If checking is false, then we want to actually perform the operation.
-					if (!checking) {
-						new SampleModal(this.app).open();
-					}
+    (this as Plugin).addCommand({
+      id: 'open-syntax-highlighter-view',
+      name: 'Open Syntax Highlighter View',
+      callback: () => {
+        this.activateView();
+      },
+    });
+    
+    // This adds a settings tab so the user can configure various aspects of the plugin
+    (this as Plugin).addSettingTab(new SyntaxHighlighterSettingTab((this as Plugin).app, this));
 
-					// This command will only show up in Command Palette when the check function returns true
-					return true;
-				}
-			}
-		});
+    // Update view when active file changes or content is modified
+    this.registerEvent(
+      (this as Plugin).app.workspace.on('active-leaf-change', async (leaf) => {
+        if (leaf && leaf.view instanceof MarkdownView) {
+          const activeFile = leaf.view.file;
+          if (activeFile) {
+            const content = await (this as Plugin).app.vault.cachedRead(activeFile);
+            this.updateAllSyntaxViews(content);
+          }
+        }
+      })
+    );
+    
+    this.registerEvent(
+        (this as Plugin).app.workspace.on('editor-change', async (editor, markdownView) => {
+            if (markdownView && markdownView.file) {
+                 const content = editor.getValue();
+                 this.updateAllSyntaxViews(content);
+            }
+        })
+    );
+    
+    // Initial content load for already open markdown files
+    const activeLeaf = this.app.workspace.getActiveViewOfType(MarkdownView);
+    if (activeLeaf && activeLeaf.file) {
+        const content = await this.app.vault.cachedRead(activeLeaf.file);
+        this.updateAllSyntaxViews(content);
+    }
+  }
 
-		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
+  updateAllSyntaxViews(content: string) {
+    (this as Plugin).app.workspace.getLeavesOfType(VIEW_TYPE_SYNTAX).forEach(leaf => {
+      if (leaf.view instanceof SyntaxHighlighterView) {
+        leaf.view.updateContent(content);
+      }
+    });
+  }
+  
+  notifyViewsOfSettingChanges() {
+    (this as Plugin).app.workspace.getLeavesOfType(VIEW_TYPE_SYNTAX).forEach(leaf => {
+      if (leaf.view instanceof SyntaxHighlighterView) {
+        leaf.view.updateSettings(this.settings);
+      }
+    });
+  }
 
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			console.log('click', evt);
-		});
+  activateView() {
+    const existingLeaves = (this as Plugin).app.workspace.getLeavesOfType(VIEW_TYPE_SYNTAX);
+    if (existingLeaves.length > 0) {
+      (this as Plugin).app.workspace.revealLeaf(existingLeaves[0]);
+      return;
+    }
 
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
+    const leaf = (this as Plugin).app.workspace.getLeaf('split', 'vertical');
+    leaf.setViewState({
+      type: VIEW_TYPE_SYNTAX,
+      active: true,
+    });
+    (this as Plugin).app.workspace.revealLeaf(leaf);
+  }
 
-		this.registerView(
-			VIEW_TYPE_SYNTAX,
-			(leaf) => new SyntaxHighlighterView(leaf)
-		);
+  onunload() {
+    (this as Plugin).app.workspace.detachLeavesOfType(VIEW_TYPE_SYNTAX);
+  }
 
-		this.addCommand({
-			id: 'open-syntax-highlighter-view',
-			name: 'Open Syntax Highlighter View',
-			callback: () => {
-				this.app.workspace.getLeaf(true).setViewState({
-					type: VIEW_TYPE_SYNTAX,
-					active: true,
-				});
-			},
-		});
+  async loadSettings() {
+    const loadedData = await (this as Plugin).loadData();
+    // Ensure all parts of DEFAULT_SETTINGS are present if not in loadedData
+    this.settings = Object.assign({}, JSON.parse(JSON.stringify(DEFAULT_SETTINGS)), loadedData);
+    
+    // Ensure customPatterns is always an array
+    if (!Array.isArray(this.settings.customPatterns)) {
+        this.settings.customPatterns = [];
+    }
+    // Ensure each pattern has an ID (for Svelte keying, especially for older data)
+    this.settings.customPatterns = this.settings.customPatterns.map(p => ({
+        ...p,
+        id: p.id || `pattern-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    }));
+  }
 
-		this.registerEvent(this.app.workspace.on('file-open', async (file) => {
-			if (file) {
-				const content = await this.app.vault.read(file);
-				this.app.workspace.getLeavesOfType(VIEW_TYPE_SYNTAX).forEach(leaf => {
-					if (leaf.view instanceof SyntaxHighlighterView) {
-						leaf.view.updateContent(content);
-					}
-				});
-			}
-		}));
-
-		this.registerEvent(this.app.workspace.on('active-leaf-change', async (leaf) => {
-			if (leaf && leaf.view instanceof MarkdownView) {
-				const activeFile = leaf.view.file;
-				if (activeFile) {
-					const content = await this.app.vault.read(activeFile);
-					this.app.workspace.getLeavesOfType(VIEW_TYPE_SYNTAX).forEach(syntaxLeaf => {
-						if (syntaxLeaf.view instanceof SyntaxHighlighterView) {
-							syntaxLeaf.view.updateContent(content);
-						}
-					});
-				}
-			}
-		}));
-	}
-
-	onunload() {
-		this.app.workspace.detachLeavesOfType(VIEW_TYPE_SYNTAX);
-	}
-
-	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-	}
-
-	async saveSettings() {
-		await this.saveData(this.settings);
-	}
+  async saveSettings() {
+    await (this as Plugin).saveData(this.settings);
+    this.notifyViewsOfSettingChanges();
+  }
 }
 
+class SyntaxHighlighterSettingTab extends PluginSettingTab {
+  plugin: MyPlugin;
+  private svelteComponent: SettingsEditorSvelte | undefined;
+
+  constructor(app: App, plugin: MyPlugin) {
+    super(app, plugin);
+    this.plugin = plugin;
+  }
+
+  display(): void {
+    const { containerEl } = (this as PluginSettingTab);
+    containerEl.empty();
+
+    // Mount the Svelte component for settings
+    this.svelteComponent = mount(SettingsEditorSvelte, {
+      target: containerEl,
+      props: {
+        settings: this.plugin.settings,
+        onSettingsChange: (newSettings: MyPluginSettings) => {
+          this.plugin.settings = newSettings;
+          this.plugin.saveSettings();
+        }
+      }
+    });
+  }
+
+  hide(): void {
+    // Unmount Svelte component when tab is closed
+    if (this.svelteComponent) {
+      unmount(this.svelteComponent);
+      this.svelteComponent = undefined;
+    }
+  }
+}
+
+// Minimal SampleModal and other classes if needed, or remove if not central to this feature
+// For brevity, keeping SampleModal minimal as it's not the focus
 class SampleModal extends Modal {
 	constructor(app: App) {
 		super(app);
 	}
 
 	onOpen() {
-		const {contentEl} = this;
-		contentEl.setText('Woah!');
+		const {contentEl} = (this as Modal);
+		contentEl.setText('Syntax Highlighter Plugin Active');
 	}
 
 	onClose() {
-		const {contentEl} = this;
+		const {contentEl} = (this as Modal);
 		contentEl.empty();
-	}
-}
-
-class SampleSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
-
-	constructor(app: App, plugin: MyPlugin) {
-		super(app, plugin);
-		this.plugin = plugin;
-	}
-
-	display(): void {
-		const {containerEl} = this;
-
-		containerEl.empty();
-
-		new Setting(containerEl)
-			.setName('Setting #1')
-			.setDesc('It\'s a secret')
-			.addText(text => text
-				.setPlaceholder('Enter your secret')
-				.setValue(this.plugin.settings.mySetting)
-				.onChange(async (value) => {
-					this.plugin.settings.mySetting = value;
-					await this.plugin.saveSettings();
-				}));
 	}
 }
