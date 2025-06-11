@@ -1,4 +1,5 @@
 
+
 import { App, Editor, MarkdownView, Modal, /* Notice, */ Plugin, PluginSettingTab, Setting, ItemView, WorkspaceLeaf, type PluginManifest, type MarkdownFileInfo } from 'obsidian';
 import SyntaxHighlighterSvelte from './SyntaxHighlighter.svelte';
 import SettingsEditorSvelte from './SettingsEditor.svelte'; // New Svelte component for settings
@@ -7,6 +8,7 @@ import { mount, unmount } from './svelte-utils';
 // Interfaces for settings
 export interface CustomPatternConfig {
   id: string;
+  name: string; // Added for user-friendly identification
   enabled: boolean;
   regex: string;
   flags: string;
@@ -18,28 +20,26 @@ export interface CustomPatternConfig {
 export interface MyPluginSettings {
   enableGlobalSyntaxHighlighting: boolean;
   customPatterns: CustomPatternConfig[];
-  // mySetting: string; // This can be removed if no longer needed, or kept for other purposes
 }
+
+const DEFAULT_PATTERNS: CustomPatternConfig[] = [
+  { id: 'default-comment', name: 'Comments (#...)', enabled: true, regex: '#.*$', flags: 'gm', cls: 'comm-dj', color: '#75715E', captureGroup: '' },
+  { id: 'default-numbers', name: 'Numbers', enabled: true, regex: '\\b(?:0[xX][0-9a-fA-F]+|0[oO][0-7]+|0[bB][01]+|[0-9]+\\.[0-9]*(?:[eE][+-]?[0-9]+)?|[0-9]+)\\b', flags: 'g', cls: 'num-dj', color: '#AE81FF', captureGroup: '' },
+  { id: 'default-operators', name: 'Operators', enabled: true, regex: '\\+|-|\\*|\\/|\\/\\/|\\\\|%|@|<<|>>|&|\\||\\^|~|<|>|<=|>=|==|!=|:=|=', flags: 'g', cls: 'op-dj', color: '#FD971F', captureGroup: '' },
+  { id: 'default-punctuation', name: 'Punctuation', enabled: true, regex: '[\\.,;:?!\\|µ]', flags: 'g', cls: 'ponct-dj', color: 'var(--text-muted)', captureGroup: '' },
+  { id: 'default-class-def', name: 'Class Name (after class)', enabled: true, regex: '\\bclass\\s+([a-zA-Z_][a-zA-Z0-9_]*)', flags: 'g', cls: 'type-dj', color: '#66D9EF', captureGroup: '1' },
+  { id: 'default-function-call', name: 'Function Names/Calls', enabled: true, regex: '([a-zA-Z_][a-zA-Z0-9_]*)\\s*\\(', flags: 'g', cls: 'func-dj', color: '#A6E22E', captureGroup: '1' },
+  { id: 'default-keywords', name: 'Keywords', enabled: true, regex: '\\b(and|as|assert|async|await|break|class|continue|def|del|elif|else|except|finally|for|from|global|if|import|in|is|lambda|nonlocal|not|or|pass|raise|return|try|while|with|yield)\\b', flags: 'g', cls: 'key-dj', color: '#F92672', captureGroup: '' },
+  { id: 'default-sentence-caps', name: 'Sentence Start Capitals', enabled: true, regex: '(?:^|[.!?]\\s+)([A-Z])', flags: 'g', cls: 'sent-dj', color: '#E6DB74', captureGroup: '1' },
+  { id: 'default-general-caps', name: 'Capital Letters', enabled: true, regex: '([A-Z])', flags: 'g', cls: 'caps-dj', color: '#A6E22E', captureGroup: '1' }
+];
 
 const DEFAULT_SETTINGS: MyPluginSettings = {
   enableGlobalSyntaxHighlighting: true,
-  customPatterns: [
-    // Example default custom pattern (optional)
-    // {
-    //   id: 'default-example-1',
-    //   enabled: true,
-    //   regex: "\\bIMPORTANT\\b",
-    //   flags: "g",
-    //   cls: "custom-important",
-    //   color: "#FFBF00",
-    //   captureGroup: ""
-    // }
-  ],
-  // mySetting: 'default'
+  customPatterns: JSON.parse(JSON.stringify(DEFAULT_PATTERNS)), // Deep copy
 };
 
 export const VIEW_TYPE_SYNTAX = 'syntax-highlighter-view';
-// export const VIEW_TYPE_EXAMPLE = 'example-view'; // Not used in current context
 
 export class SyntaxHighlighterView extends ItemView {
   private svelteComponent: SyntaxHighlighterSvelte | undefined;
@@ -106,7 +106,6 @@ export default class MyPlugin extends Plugin {
 
   constructor(app: App, manifest: PluginManifest) {
     super(app, manifest);
-    // Initialize with a default-like structure, loadSettings will overwrite
     this.settings = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
   }
 
@@ -131,11 +130,9 @@ export default class MyPlugin extends Plugin {
       },
     });
     
-    // This adds a settings tab so the user can configure various aspects of the plugin
     (this as Plugin).addSettingTab(new SyntaxHighlighterSettingTab((this as Plugin).app, this));
 
-    // Update view when active file changes or content is modified
-    this.registerEvent(
+    (this as Plugin).registerEvent(
       (this as Plugin).app.workspace.on('active-leaf-change', async (leaf) => {
         if (leaf && leaf.view instanceof MarkdownView) {
           const activeFile = leaf.view.file;
@@ -147,7 +144,7 @@ export default class MyPlugin extends Plugin {
       })
     );
     
-    this.registerEvent(
+    (this as Plugin).registerEvent(
         (this as Plugin).app.workspace.on('editor-change', async (editor, markdownView) => {
             if (markdownView && markdownView.file) {
                  const content = editor.getValue();
@@ -156,10 +153,9 @@ export default class MyPlugin extends Plugin {
         })
     );
     
-    // Initial content load for already open markdown files
-    const activeLeaf = this.app.workspace.getActiveViewOfType(MarkdownView);
+    const activeLeaf = (this as Plugin).app.workspace.getActiveViewOfType(MarkdownView);
     if (activeLeaf && activeLeaf.file) {
-        const content = await this.app.vault.cachedRead(activeLeaf.file);
+        const content = await (this as Plugin).app.vault.cachedRead(activeLeaf.file);
         this.updateAllSyntaxViews(content);
     }
   }
@@ -201,18 +197,41 @@ export default class MyPlugin extends Plugin {
 
   async loadSettings() {
     const loadedData = await (this as Plugin).loadData();
-    // Ensure all parts of DEFAULT_SETTINGS are present if not in loadedData
-    this.settings = Object.assign({}, JSON.parse(JSON.stringify(DEFAULT_SETTINGS)), loadedData);
+    const baseSettings = JSON.parse(JSON.stringify(DEFAULT_SETTINGS)); // Fresh defaults
+
+    if (loadedData) {
+        this.settings = {
+            ...baseSettings, // Start with defaults
+            ...loadedData,    // Override with loaded data
+        };
+        // Ensure customPatterns from loadedData is used if it exists, even if empty
+        if (loadedData.customPatterns !== undefined) {
+            this.settings.customPatterns = loadedData.customPatterns;
+        }
+    } else {
+        this.settings = baseSettings; // No saved data, use fresh defaults
+    }
     
     // Ensure customPatterns is always an array
     if (!Array.isArray(this.settings.customPatterns)) {
-        this.settings.customPatterns = [];
+        this.settings.customPatterns = JSON.parse(JSON.stringify(DEFAULT_PATTERNS)); 
     }
-    // Ensure each pattern has an ID (for Svelte keying, especially for older data)
-    this.settings.customPatterns = this.settings.customPatterns.map(p => ({
-        ...p,
-        id: p.id || `pattern-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-    }));
+    
+    // Ensure all patterns have necessary fields, providing defaults for missing ones
+    this.settings.customPatterns = this.settings.customPatterns.map((p: any, index: number) => {
+        const defaultPatternScaffold = DEFAULT_PATTERNS.find(dp => dp.id === p.id) || 
+                                     { name: `Pattern ${index + 1}`, enabled: true, regex: "", flags: "gm", cls: "custom-dj-highlight", color: "#FFFFFF", captureGroup: "" };
+        return {
+            id: p.id || `pattern-${Date.now()}-${index}-${Math.random().toString(36).substr(2, 9)}`,
+            name: p.name || defaultPatternScaffold.name,
+            enabled: typeof p.enabled === 'boolean' ? p.enabled : defaultPatternScaffold.enabled,
+            regex: p.regex || defaultPatternScaffold.regex,
+            flags: p.flags || defaultPatternScaffold.flags,
+            cls: p.cls || defaultPatternScaffold.cls,
+            color: p.color || defaultPatternScaffold.color,
+            captureGroup: p.captureGroup || defaultPatternScaffold.captureGroup || ""
+        };
+    });
   }
 
   async saveSettings() {
@@ -234,7 +253,6 @@ class SyntaxHighlighterSettingTab extends PluginSettingTab {
     const { containerEl } = (this as PluginSettingTab);
     containerEl.empty();
 
-    // Mount the Svelte component for settings
     this.svelteComponent = mount(SettingsEditorSvelte, {
       target: containerEl,
       props: {
@@ -248,7 +266,6 @@ class SyntaxHighlighterSettingTab extends PluginSettingTab {
   }
 
   hide(): void {
-    // Unmount Svelte component when tab is closed
     if (this.svelteComponent) {
       unmount(this.svelteComponent);
       this.svelteComponent = undefined;
@@ -256,8 +273,6 @@ class SyntaxHighlighterSettingTab extends PluginSettingTab {
   }
 }
 
-// Minimal SampleModal and other classes if needed, or remove if not central to this feature
-// For brevity, keeping SampleModal minimal as it's not the focus
 class SampleModal extends Modal {
 	constructor(app: App) {
 		super(app);

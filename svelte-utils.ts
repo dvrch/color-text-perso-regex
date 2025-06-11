@@ -26,7 +26,7 @@ export function mount<
     target: options.target,
     props: options.props || {},
     anchor: options.anchor,
-    intro: options.intro,
+    intro: options.intro ?? false, // Svelte 4/5 might prefer explicit false over undefined
   });
 }
 
