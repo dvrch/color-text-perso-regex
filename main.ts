@@ -24,19 +24,33 @@ export interface MyPluginSettings {
 
 // Updated DEFAULT_PATTERNS based on user's Sublime Text .tmTheme and .sublime-syntax
 const DEFAULT_PATTERNS: CustomPatternConfig[] = [
-  // From sublime-syntax and tmTheme
+  // Core lexical elements first
   { id: 'dj-comment', name: 'DJ Comments (#...)', enabled: true, regex: '#.*$', flags: 'gm', cls: 'comm-dj', color: '#16FF00', captureGroup: '' },
-  { id: 'dj-numbers', name: 'DJ Numbers', enabled: true, regex: '\\b(?:0[xX][0-9a-fA-F]+|0[oO][0-7]+|0[bB][01]+|[0-9]+\\.[0-9]*(?:[eE][+-]?[0-9]+)?|[0-9]+)\\b', flags: 'g', cls: 'num-dj', color: '#AE81FF', captureGroup: '' },
-  { id: 'dj-operators', name: 'DJ Operators', enabled: true, regex: '\\+|-|\\*|\\/|\\/\\/|\\|\\||\\\\|%|@|<<|>>|&|\\||\\^|~|<|>|<=|>=|==|!=|:=|=', flags: 'g', cls: 'op-dj', color: '#F92672', captureGroup: '' }, // Color from op.dj in theme
-  { id: 'dj-punctuation', name: 'DJ Punctuation', enabled: true, regex: '[.,;:?!|µ]', flags: 'g', cls: 'ponct-dj', color: '#A8F819', captureGroup: '' },
+  { id: 'dj-keywords', name: 'DJ Keywords', enabled: true, regex: '\\b(and|as|assert|async|await|break|class|continue|def|del|elif|else|except|finally|for|from|global|if|import|in|is|lambda|nonlocal|not|or|pass|raise|return|try|while|with|yield)\\b', flags: 'g', cls: 'key-dj', color: '#F92672', captureGroup: '' },
   { id: 'dj-class-def', name: 'DJ Class Name', enabled: true, regex: '\\bclass\\s+([a-zA-Z_][a-zA-Z0-9_]*)', flags: 'g', cls: 'type-dj', color: '#66D9EF', captureGroup: '1' },
   { id: 'dj-function-call', name: 'DJ Function Names/Calls', enabled: true, regex: '([a-zA-Z_][a-zA-Z0-9_]*)\\s*\\(', flags: 'g', cls: 'func-dj', color: '#A6E22E', captureGroup: '1' },
-  { id: 'dj-keywords', name: 'DJ Keywords', enabled: true, regex: '\\b(and|as|assert|async|await|break|class|continue|def|del|elif|else|except|finally|for|from|global|if|import|in|is|lambda|nonlocal|not|or|pass|raise|return|try|while|with|yield)\\b', flags: 'g', cls: 'key-dj', color: '#F92672', captureGroup: '' }, // Color from key.dj in theme
-  { id: 'dj-sentence-caps', name: 'DJ Sentence Start Capitals', enabled: true, regex: '(?:^|[.!?]\\s+)([A-Z])', flags: 'g', cls: 'sent-dj', color: '#66D9EF', captureGroup: '1' }, // Color from sent.dj in theme
-  { id: 'dj-general-caps', name: 'DJ Capital Letters', enabled: true, regex: '([A-Z])', flags: 'g', cls: 'caps-dj', color: '#A6E22E', captureGroup: '1' }, // Color from caps.dj in theme
-  // Delimiters from sublime-syntax
+  { id: 'dj-numbers', name: 'DJ Numbers', enabled: true, regex: '\\b(?:0[xX][0-9a-fA-F]+|0[oO][0-7]+|0[bB][01]+|[0-9]+\\.[0-9]*(?:[eE][+-]?[0-9]+)?|[0-9]+)\\b', flags: 'g', cls: 'num-dj', color: '#AE81FF', captureGroup: '' },
+  { id: 'dj-operators', name: 'DJ Operators', enabled: true, regex: '\\+|-|\\*|\\/|\\/\\/|\\|\\||\\\\|%|@|<<|>>|&|\\||\\^|~|<|>|<=|>=|==|!=|:=|=', flags: 'g', cls: 'op-dj', color: '#F92672', captureGroup: '' },
+  { id: 'dj-punctuation', name: 'DJ Punctuation', enabled: true, regex: '[.,;:?!|µ]', flags: 'g', cls: 'ponct-dj', color: '#A8F819', captureGroup: '' },
+  
+  // Delimiters themselves
   { id: 'dj-delim-open', name: 'DJ Delimiters (Open)', enabled: true, regex: '\\(|\\{|\\[|\\"|«|<|_', flags: 'g', cls: 'delim-g-open-dj', color: '#E6AA74', captureGroup: '' },
   { id: 'dj-delim-close', name: 'DJ Delimiters (Close)', enabled: true, regex: '\\)|\\}|\\]|\\"|»|>|_', flags: 'g', cls: 'delim-g-close-dj', color: '#FF0000', captureGroup: '' },
+
+  // Content within delimiters (using #E6DB74 from cont.g.dj)
+  { id: 'dj-content-in-parens', name: 'DJ Content in Parentheses', enabled: true, regex: '\\(([^)]*)\\)', flags: 'g', cls: 'cont-dj', color: '#E6DB74', captureGroup: '1' },
+  { id: 'dj-content-in-braces', name: 'DJ Content in Braces', enabled: true, regex: '\\{([^}]*)\\}', flags: 'g', cls: 'cont-dj', color: '#E6DB74', captureGroup: '1' },
+  { id: 'dj-content-in-brackets', name: 'DJ Content in Brackets', enabled: true, regex: '\\[([^\\]]*)\\]', flags: 'g', cls: 'cont-dj', color: '#E6DB74', captureGroup: '1' }, // Note: \\] for literal ]
+  { id: 'dj-content-in-double-quotes', name: 'DJ Content in Double Quotes', enabled: true, regex: '"([^"]*)"', flags: 'g', cls: 'cont-dj', color: '#E6DB74', captureGroup: '1' },
+  { id: 'dj-content-in-guillemets', name: 'DJ Content in Guillemets', enabled: true, regex: '«([^»]*)»', flags: 'g', cls: 'cont-dj', color: '#E6DB74', captureGroup: '1' },
+  // Content within underscores like _content_ (if _ is used as a symmetric delimiter)
+  // { id: 'dj-content-in-underscores', name: 'DJ Content in Underscores', enabled: true, regex: '_([^_]*)_', flags: 'g', cls: 'cont-dj', color: '#E6DB74', captureGroup: '1' },
+  // Content within angle brackets like <content> (could be very broad, use with caution)
+  // { id: 'dj-content-in-angles', name: 'DJ Content in Angle Brackets', enabled: true, regex: '<([^>]*)>', flags: 'g', cls: 'cont-dj', color: '#E6DB74', captureGroup: '1' },
+
+  // General text patterns (often broader or character-level)
+  { id: 'dj-sentence-caps', name: 'DJ Sentence Start Capitals', enabled: true, regex: '(?:^|[.!?]\\s+)([A-Z])', flags: 'g', cls: 'sent-dj', color: '#66D9EF', captureGroup: '1' },
+  { id: 'dj-general-caps', name: 'DJ Capital Letters', enabled: true, regex: '([A-Z])', flags: 'g', cls: 'caps-dj', color: '#A6E22E', captureGroup: '1' },
 ];
 
 
@@ -211,10 +225,6 @@ export default class MyPlugin extends Plugin {
             enableGlobalSyntaxHighlighting: loadedData.enableGlobalSyntaxHighlighting !== undefined 
                                               ? loadedData.enableGlobalSyntaxHighlighting 
                                               : baseSettings.enableGlobalSyntaxHighlighting,
-            // Custom patterns: merge new defaults with user's saved patterns
-            // Prioritize user's modifications to existing default patterns by ID.
-            // Add any new defaults that user doesn't have.
-            // Keep user's custom patterns.
             customPatterns: [], // Will be populated below
         };
 
@@ -263,7 +273,6 @@ export default class MyPlugin extends Plugin {
     }
     
     // Final sanitization pass to ensure all patterns have essential fields
-    // This is more robust than the previous scattered sanitization
     this.settings.customPatterns = this.settings.customPatterns.map((p: any, index: number) => {
         const defaultScaffold = { 
             name: `Pattern ${index + 1}`, 
