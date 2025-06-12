@@ -1,39 +1,45 @@
-
 // svelte-utils.ts
 // A basic utility for mounting and unmounting Svelte components.
-// Your actual svelte-utils might be more complex depending on your setup.
+import type { SvelteComponentTyped } from 'svelte';
 
-import type { SvelteComponent, SvelteComponentTyped } from 'svelte';
-
-interface ComponentProps {
-  target: Element | DocumentFragment;
-  props?: Record<string, any>;
+// This interface describes the options Svelte components accept in their constructor.
+interface SvelteComponentConstructorOptions<Props> {
+  target: Element | DocumentFragment | ShadowRoot;
   anchor?: Node;
+  props?: Props;
+  context?: Map<any, any>;
+  hydrate?: boolean;
   intro?: boolean;
+  $$inline?: boolean;
 }
 
-// A generic mount function.
-// Svelte components are typically classes, so `new Component({...})` is the core.
 export function mount<
-  Props extends Record<string, any> = any,
-  Events extends Record<string, any> = any,
-  Slots extends Record<string, any> = any
+  Props extends Record<string, any>,
+  Events extends Record<string, any>,
+  Slots extends Record<string, any>
 >(
-  Component: new (...args: any[]) => SvelteComponentTyped<Props, Events, Slots>,
-  options: ComponentProps
+  Component: new (options: SvelteComponentConstructorOptions<Props>) => SvelteComponentTyped<Props, Events, Slots>,
+  options: { // This is the options object passed to our mount util
+    target: Element | DocumentFragment | ShadowRoot;
+    props?: Props;
+    anchor?: Node;
+    intro?: boolean;
+  }
 ): SvelteComponentTyped<Props, Events, Slots> {
-  return new Component({
+  // Construct the options object for the Svelte component constructor,
+  // applying defaults from the original JS logic.
+  const constructorOptions: SvelteComponentConstructorOptions<Props> = {
     target: options.target,
-    props: options.props || {},
+    props: options.props || ({} as Props), // Default to empty object if props undefined
     anchor: options.anchor,
-    intro: options.intro ?? false, // Svelte 4/5 might prefer explicit false over undefined
-  });
+    intro: options.intro ?? false, // Default to false if intro undefined
+  };
+  
+  return new Component(constructorOptions);
 }
 
-// A generic unmount function.
-// Svelte components have a $destroy method.
-export function unmount(component: SvelteComponent | SvelteComponentTyped | undefined | null): void {
-  if (component && component.$destroy) {
+export function unmount(component: { $destroy: () => void } | undefined | null): void {
+  if (component && typeof component.$destroy === 'function') {
     component.$destroy();
   }
 }
