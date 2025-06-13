@@ -8,6 +8,7 @@ import SyntaxHighlighterSvelte from './SyntaxHighlighter.svelte';
 import SettingsEditorSvelte from './SettingsEditor.svelte';
 import { mount, unmount, type Svelte4Constructor } from './svelte-utils';
 import type { SvelteComponent } from 'svelte';
+import { DEFAULT_SETTINGS } from './SettingsDefaults.svelte';
 
 // Interfaces for settings (remain in main.ts for type safety of plugin core logic)
 export interface CustomPatternConfig {
@@ -23,6 +24,7 @@ export interface CustomPatternConfig {
 
 export interface MyPluginSettings {
   enableGlobalSyntaxHighlighting: boolean;
+  defaultTextColor: string;
   customPatterns: CustomPatternConfig[];
 }
 
@@ -30,6 +32,7 @@ export interface MyPluginSettings {
 // as their original files are being removed and content moved to main.ts.
 
 // Placeholder/Example for DEFAULT_PATTERNS
+/* REMOVED: This was moved to SettingsDefaults.svelte
 export const DEFAULT_PATTERNS: CustomPatternConfig[] = [
   {
     id: 'uuid',
@@ -43,12 +46,16 @@ export const DEFAULT_PATTERNS: CustomPatternConfig[] = [
   },
   // Add other default patterns here
 ];
+*/
 
 // Placeholder/Example for DEFAULT_SETTINGS
+/* REMOVED: This was moved to SettingsDefaults.svelte
 export const DEFAULT_SETTINGS: MyPluginSettings = {
   enableGlobalSyntaxHighlighting: true,
+  defaultTextColor: '#000000',
   customPatterns: JSON.parse(JSON.stringify(DEFAULT_PATTERNS)), // Initialize with a deep copy
 };
+*/
 
 // Placeholder/Example for normalizeAndMergeSettings
 export function normalizeAndMergeSettings(
@@ -65,6 +72,11 @@ export function normalizeAndMergeSettings(
   // Merge enableGlobalSyntaxHighlighting
   if (typeof loadedData.enableGlobalSyntaxHighlighting === 'boolean') {
     settings.enableGlobalSyntaxHighlighting = loadedData.enableGlobalSyntaxHighlighting;
+  }
+
+  // Merge defaultTextColor
+  if (typeof loadedData.defaultTextColor === 'string') {
+    settings.defaultTextColor = loadedData.defaultTextColor;
   }
 
   // Merge customPatterns
@@ -107,6 +119,7 @@ interface SyntaxHighlighterViewProps {
   content: string;
   customPatterns: CustomPatternConfig[];
   enableGlobalSyntaxHighlighting: boolean;
+  defaultTextColor: string;
 }
 
 export class SyntaxHighlighterView extends ItemView {
@@ -145,6 +158,7 @@ export class SyntaxHighlighterView extends ItemView {
           content: this.currentContent,
           customPatterns: this.currentSettings.customPatterns.map(p => ({ ...p })),
           enableGlobalSyntaxHighlighting: this.currentSettings.enableGlobalSyntaxHighlighting,
+          defaultTextColor: this.currentSettings.defaultTextColor,
         }
       }
     );
@@ -170,6 +184,7 @@ export class SyntaxHighlighterView extends ItemView {
       this.svelteComponent.$set({
         customPatterns: this.currentSettings.customPatterns.map(p => ({ ...p })),
         enableGlobalSyntaxHighlighting: this.currentSettings.enableGlobalSyntaxHighlighting,
+        defaultTextColor: this.currentSettings.defaultTextColor,
       });
     }
   }
