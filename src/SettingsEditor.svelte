@@ -319,7 +319,7 @@
   }
   .pattern-field input:focus,
   .pattern-name-input:focus,
-  input:focus-visible,
+  input:focus-visible, 
   button:focus-visible {
      border-color: var(--interactive-accent);
      box-shadow: 0 0 0 1px var(--interactive-accent);
@@ -348,7 +348,7 @@
   .flags-container {
     display: flex;
     gap: 0.5rem;
-    flex-wrap: wrap;
+    flex-wrap: wrap; 
   }
   .flags-container label {
     display: flex;
@@ -360,7 +360,7 @@
     margin: 0;
   }
   .flags-container label span {
-    font-size: 0.9em;
+    font-size: 0.9em; 
   }
   .color-circle-wrapper {
     width: 28px;
@@ -375,7 +375,7 @@
     flex-shrink: 0;
   }
   .color-input-circle {
-    width: 150%;
+    width: 150%; 
     height: 150%;
     border: none;
     padding: 0;
@@ -410,21 +410,7 @@
     min-width: 0;
   }
 
-  .regex-field {
-    grid-column: 1 / -1; /* Regex spans all columns on first row */
-    grid-row: 1;
-  }
-
-  .capture-group-field {
-    grid-column: 1; /* Capture Group in first column of second row */
-    grid-row: 2;
-  }
-
-  .flags-field {
-    grid-column: 2; /* Flags in second column of second row */
-    grid-row: 2;
-  }
-
+  /* Responsive adjustments for specific fields */
   @media (max-width: 768px) {
     .pattern-content-grid {
       grid-template-columns: 1fr; /* Stack all fields */
@@ -437,7 +423,7 @@
       margin-top: 10px;
       margin-left: 0;
       width: 100%;
-      justify-content: flex-end;
+      justify-content: flex-end; 
     }
     .pattern-name-input,
     .header-field {
