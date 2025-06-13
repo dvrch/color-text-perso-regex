@@ -20,6 +20,7 @@
   // Default settings (plain JavaScript object)
   export const DEFAULT_SETTINGS = {
     enableGlobalSyntaxHighlighting: true,
+    defaultTextColor: '#808080', // Gris par défaut
     customPatterns: JSON.parse(JSON.stringify(DEFAULT_PATTERNS)), // Deep copy for initial state
   };
 </script>

@@ -1,5 +1,6 @@
 <script>
   import { createEventDispatcher } from 'svelte';
+  import { DEFAULT_SETTINGS, DEFAULT_PATTERNS } from './SettingsDefaults.svelte';
   // No longer importing MyPluginSettings, CustomPatternConfig from './main'
   // Props are now plain JavaScript, types are not explicitly declared here.
 
@@ -33,6 +34,15 @@
     notifyChange();
   }
 
+  function resetToDefaults() {
+    settings = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
+    notifyChange();
+  }
+
+  function getDefaultValue(field) {
+    return DEFAULT_SETTINGS[field];
+  }
+
   // Ensure settings.customPatterns is always an array
   if (!Array.isArray(settings.customPatterns)) {
     settings.customPatterns = [];
@@ -45,13 +55,38 @@
     <label for="enableGlobalSyntaxHighlighting" class="global-toggle-label">
       Enable Global Syntax Highlighting
     </label>
-    <input 
-      type="checkbox" 
-      id="enableGlobalSyntaxHighlighting" 
-      bind:checked={settings.enableGlobalSyntaxHighlighting} 
-      on:change={notifyChange}
-      aria-labelledby="enableGlobalSyntaxHighlightingLabel"
-    />
+    <div class="setting-control">
+      <input 
+        type="checkbox" 
+        id="enableGlobalSyntaxHighlighting" 
+        bind:checked={settings.enableGlobalSyntaxHighlighting} 
+        on:change={notifyChange}
+        aria-labelledby="enableGlobalSyntaxHighlightingLabel"
+      />
+      <span class="default-value">Default: {getDefaultValue('enableGlobalSyntaxHighlighting') ? 'Enabled' : 'Disabled'}</span>
+    </div>
+  </div>
+
+  <div class="setting-item default-color">
+    <label for="defaultTextColor" class="default-color-label">
+      Default Text Color
+    </label>
+    <div class="setting-control">
+      <input 
+        type="color" 
+        id="defaultTextColor" 
+        bind:value={settings.defaultTextColor} 
+        on:input={notifyChange}
+        aria-label="Default text color"
+      />
+      <span class="default-value">Default: <span class="color-preview" style="background-color: {getDefaultValue('defaultTextColor')}"></span> {getDefaultValue('defaultTextColor')}</span>
+    </div>
+  </div>
+
+  <div class="settings-actions">
+    <button on:click={resetToDefaults} class="reset-button" title="Reset to default settings">
+      Reset to Defaults
+    </button>
   </div>
 
   <h3 class="patterns-heading">Highlighting Patterns</h3>
@@ -203,10 +238,78 @@
 
 <style>
   .settings-container-dj {
-    padding: 5px; 
-    max-width: 100%;
-    box-sizing: border-box;
+    padding: 20px;
   }
+
+  .setting-item {
+    margin-bottom: 15px;
+  }
+
+  .setting-control {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .default-value {
+    color: #666;
+    font-size: 0.9em;
+  }
+
+  .color-preview {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 1px solid #ccc;
+    border-radius: 2px;
+    margin-right: 5px;
+    vertical-align: middle;
+  }
+
+  .default-color {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .default-color-label {
+    min-width: 120px;
+  }
+
+  .default-color input[type="color"] {
+    width: 50px;
+    height: 30px;
+    padding: 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .settings-actions {
+    margin: 15px 0;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .reset-button {
+    background-color: #ff4444;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+  }
+
+  .reset-button:hover {
+    background-color: #ff0000;
+  }
+
+  .reset-button:active {
+    background-color: #cc0000;
+  }
+
   .global-toggle {
     display: flex;
     align-items: center;
