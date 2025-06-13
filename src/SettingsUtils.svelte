@@ -26,7 +26,7 @@
           regex: "",
           flags: "gm",
           cls: "custom-dj-highlight",
-          color: "#FFFFFF",
+          color: "#00FFFF",
           captureGroup: ""
       };
 

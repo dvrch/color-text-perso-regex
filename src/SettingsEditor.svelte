@@ -21,7 +21,7 @@
       regex: "",
       flags: "gm",
       cls: "custom-dj-highlight",
-      color: "#FFFFFF",
+      color: "#FFFF00",
       captureGroup: ""
     };
     settings.customPatterns = [...settings.customPatterns, newPattern];
@@ -69,6 +69,28 @@
           aria-label="Pattern name"
         />
         <div class="pattern-controls">
+          <div class="pattern-field css-class-field header-field">
+            <label for={`cls-${pattern.id}`} class="visually-hidden">CSS Class</label>
+            <input 
+              id={`cls-${pattern.id}`} 
+              type="text" 
+              placeholder="CSS Class" 
+              bind:value={pattern.cls} 
+              on:input={notifyChange}
+              aria-label="CSS class for pattern {pattern.name}"
+            />
+          </div>
+          <div class="color-circle-wrapper">
+            <label for={`color-${pattern.id}`} class="visually-hidden">Color</label>
+            <input 
+              id={`color-${pattern.id}`} 
+              type="color" 
+              bind:value={pattern.color} 
+              on:input={notifyChange}
+              aria-label="Highlight color for pattern {pattern.name}"
+              class="color-input-circle"
+            />
+          </div>
           <label class="enabled-toggle" title="Enable/Disable this pattern">
             <input 
               type="checkbox" 
@@ -88,8 +110,8 @@
           </button>
         </div>
       </div>
-      <div class="pattern-grid">
-        <div class="pattern-field">
+      <div class="pattern-content-grid">
+        <div class="pattern-field regex-field">
           <label for={`regex-${pattern.id}`}>Regex</label>
           <input 
             id={`regex-${pattern.id}`} 
@@ -100,49 +122,75 @@
             aria-label="Regular expression for pattern {pattern.name}"
           />
         </div>
-        <div class="pattern-field">
-          <label for={`flags-${pattern.id}`}>Flags</label>
-          <input 
-            id={`flags-${pattern.id}`} 
-            type="text" 
-            placeholder="e.g., gm" 
-            bind:value={pattern.flags} 
-            on:input={notifyChange}
-            aria-label="Regex flags for pattern {pattern.name}"
-          />
-        </div>
-        <div class="pattern-field">
-          <label for={`cls-${pattern.id}`}>CSS Class</label>
-          <input 
-            id={`cls-${pattern.id}`} 
-            type="text" 
-            placeholder="CSS class name" 
-            bind:value={pattern.cls} 
-            on:input={notifyChange}
-            aria-label="CSS class for pattern {pattern.name}"
-          />
-        </div>
-        <div class="pattern-field">
-          <label for={`color-${pattern.id}`}>Color</label>
-          <input 
-            id={`color-${pattern.id}`} 
-            type="color" 
-            bind:value={pattern.color} 
-            on:input={notifyChange}
-            aria-label="Highlight color for pattern {pattern.name}"
-            class="color-input"
-          />
-        </div>
         <div class="pattern-field capture-group-field">
           <label for={`captureGroup-${pattern.id}`}>Capture Group</label>
           <input 
             id={`captureGroup-${pattern.id}`} 
-            type="text" 
-            placeholder="e.g., 0 or 1" 
+            type="number" 
+            min="0"
+            max="99"
+            placeholder="e.g., 0-99" 
             bind:value={pattern.captureGroup} 
             on:input={notifyChange}
             aria-label="Capture group index for pattern {pattern.name}"
           />
+        </div>
+        <div class="pattern-field flags-field">
+          <div class="flags-group">
+            <label id={`flags-label-${pattern.id}`} for={`flags-group-${pattern.id}`}>Flags (g, m, i)</label>
+            <div 
+              id={`flags-group-${pattern.id}`}
+              class="flags-container" 
+              role="group" 
+              aria-labelledby={`flags-label-${pattern.id}`}
+            >
+              <label class="flag-checkbox" for={`flag-g-${pattern.id}`}>
+                <input 
+                  id={`flag-g-${pattern.id}`}
+                  type="checkbox" 
+                  checked={pattern.flags.includes('g')}
+                  on:change={(e) => {
+                    const newFlags = e.target.checked 
+                      ? pattern.flags + 'g'
+                      : pattern.flags.replace('g', '');
+                    pattern.flags = newFlags;
+                    notifyChange();
+                  }}
+                />
+                <span>g</span>
+              </label>
+              <label class="flag-checkbox" for={`flag-m-${pattern.id}`}>
+                <input 
+                  id={`flag-m-${pattern.id}`}
+                  type="checkbox" 
+                  checked={pattern.flags.includes('m')}
+                  on:change={(e) => {
+                    const newFlags = e.target.checked 
+                      ? pattern.flags + 'm'
+                      : pattern.flags.replace('m', '');
+                    pattern.flags = newFlags;
+                    notifyChange();
+                  }}
+                />
+                <span>m</span>
+              </label>
+              <label class="flag-checkbox" for={`flag-i-${pattern.id}`}>
+                <input 
+                  id={`flag-i-${pattern.id}`}
+                  type="checkbox" 
+                  checked={pattern.flags.includes('i')}
+                  on:change={(e) => {
+                    const newFlags = e.target.checked 
+                      ? pattern.flags + 'i'
+                      : pattern.flags.replace('i', '');
+                    pattern.flags = newFlags;
+                    notifyChange();
+                  }}
+                />
+                <span>i</span>
+              </label>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -194,6 +242,7 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 8px;
+    flex-wrap: wrap;
   }
   .pattern-name-input {
     flex-grow: 1;
@@ -204,6 +253,7 @@
     border-radius: var(--radius-s);
     background-color: var(--background-primary); 
     color: var(--text-normal);
+    min-width: 150px;
   }
   .pattern-name-input:focus {
     border-color: var(--interactive-accent);
@@ -214,6 +264,7 @@
     align-items: center;
     gap: 8px;
     margin-left: 10px;
+    flex-shrink: 0;
   }
   .enabled-toggle {
     display: flex;
@@ -239,11 +290,12 @@
   .delete-button:hover {
     color: var(--text-error);
   }
-  .pattern-grid {
+  .pattern-content-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: 2fr 1fr 1fr; /* Regex, Capture Group, Flags */
     gap: 8px 10px;
-    align-items: end; 
+    align-items: start;
+    margin-top: 10px;
   }
   .pattern-field {
     display: flex;
@@ -255,8 +307,7 @@
     color: var(--text-muted);
     font-weight: 500;
   }
-  .pattern-field input[type="text"],
-  .pattern-field input[type="color"] {
+  .pattern-field input[type="text"] {
     width: 100%;
     padding: 6px 8px;
     border: 1px solid var(--background-modifier-border);
@@ -266,13 +317,14 @@
     font-size: var(--font-ui-small);
     box-sizing: border-box;
   }
-  .pattern-field input[type="color"] {
-    padding: 4px;
-    min-height: 30px;
-  }
-  .pattern-field input:focus {
+  .pattern-field input:focus,
+  .pattern-name-input:focus,
+  input:focus-visible,
+  button:focus-visible {
      border-color: var(--interactive-accent);
      box-shadow: 0 0 0 1px var(--interactive-accent);
+     outline: 2px solid var(--interactive-accent);
+     outline-offset: 1px;
   }
   .add-pattern-button {
     margin-top: 15px;
@@ -288,8 +340,108 @@
   .add-pattern-button:hover {
     background-color: var(--interactive-accent-hover);
   }
-  input:focus-visible, button:focus-visible {
-    outline: 2px solid var(--interactive-accent);
-    outline-offset: 1px;
+  .flags-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .flags-container {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .flags-container label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+  }
+  .flags-container label input[type="checkbox"] {
+    margin: 0;
+  }
+  .flags-container label span {
+    font-size: 0.9em;
+  }
+  .color-circle-wrapper {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 1px solid var(--background-modifier-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .color-input-circle {
+    width: 150%;
+    height: 150%;
+    border: none;
+    padding: 0;
+    background: none;
+    cursor: pointer;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+  }
+  .color-input-circle::-webkit-color-swatch-wrapper {
+    padding: 0;
+  }
+  .color-input-circle::-webkit-color-swatch,
+  .color-input-circle::-moz-color-swatch {
+    border: none;
+    border-radius: 50%;
+  }
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+  }
+
+  .header-field {
+    flex-basis: 100px;
+    flex-shrink: 1;
+    min-width: 0;
+  }
+
+  .regex-field {
+    grid-column: 1 / -1; /* Regex spans all columns on first row */
+    grid-row: 1;
+  }
+
+  .capture-group-field {
+    grid-column: 1; /* Capture Group in first column of second row */
+    grid-row: 2;
+  }
+
+  .flags-field {
+    grid-column: 2; /* Flags in second column of second row */
+    grid-row: 2;
+  }
+
+  @media (max-width: 768px) {
+    .pattern-content-grid {
+      grid-template-columns: 1fr; /* Stack all fields */
+    }
+    .pattern-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .pattern-controls {
+      margin-top: 10px;
+      margin-left: 0;
+      width: 100%;
+      justify-content: flex-end;
+    }
+    .pattern-name-input,
+    .header-field {
+      width: 100%;
+    }
   }
 </style>
