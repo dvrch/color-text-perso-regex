@@ -204,7 +204,7 @@
             type="number" 
             min="0"
             max="9"
-            placeholder="e.g., 0-99" 
+            placeholder="0-9" 
             bind:value={pattern.captureGroup} 
             on:input={notifyChange}
             aria-label="Capture group index for pattern [0-9] {pattern.name}"
@@ -273,378 +273,192 @@
 </div>
 
 <style>
+  /* =========================================
+     Global Settings and Base Elements
+     ========================================= */
   .settings-container-dj {
     padding: 20px;
   }
 
-  .setting-item {
-    margin-bottom: 15px;
-  }
-
-  .setting-control {
+  /* Generic flex container for form items */
+  .setting-item, .setting-control, .default-color, .global-toggle, .pattern-header, .pattern-controls, .enabled-toggle, .pattern-content-grid, .flags-group, .color-circle-wrapper {
     display: flex;
     align-items: center;
+  }
+
+  .setting-item {
+    margin-bottom: 15px;
     gap: 15px;
   }
 
-  .default-value {
-    color: #666;
-    font-size: 0.9em;
+  /* General spacing for specific items */
+  .default-color.add-pattern-row { gap: 10px; }
+  .pattern-header { justify-content: space-between; margin-bottom: 8px; flex-wrap: nowrap; gap: 10px; }
+  .pattern-controls { gap: 8px; margin-left: 10px; flex-shrink: 0; }
+  .enabled-toggle { gap: 4px; font-size: var(--font-ui-small); color: var(--text-muted); cursor: pointer; }
+  .flags-group { gap: 5px; }
+  .pattern-content-grid { gap: 10px; }
+  .settings-actions { margin: 15px 0; justify-content: flex-end; } /* Grouped with general spacing */
+
+  /* Default text appearance */
+  .default-value { color: #666; font-size: 0.9em; }
+  .default-color-label { min-width: 120px; }
+
+  /* Common styles for inputs (text, number) and selects */
+  .pattern-name-input,
+  .pattern-field input[type='text'],
+  .pattern-field input[type='number'],
+  .pattern-field select {
+    font-size: var(--font-ui-small);
+    padding: 6px 8px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: var(--radius-s);
+    background-color: var(--background-primary);
+    color: var(--text-normal);
+    box-sizing: border-box;
+    width: 100%; /* Default to full width of parent flex item */
   }
 
-  .color-preview {
-    display: inline-block;
-    width: 12px;
-    height: 12px;
-    border: 1px solid #ccc;
-    border-radius: 2px;
-    margin-right: 5px;
-    vertical-align: middle;
+  /* Common focus styles for interactive elements */
+  input:focus, button:focus, select:focus, input:focus-visible, button:focus-visible, select:focus-visible {
+     border-color: var(--interactive-accent);
+     box-shadow: 0 0 0 1px var(--interactive-accent);
+     outline: 2px solid var(--interactive-accent);
+     outline-offset: 1px;
   }
 
-  .default-color {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .default-color-label {
-    min-width: 120px;
-  }
-
-  .default-color input[type="color"] {
-    width: 50px;
-    height: 30px;
-    padding: 0;
-    border: 1px solid #ccc;
+  /* =========================================
+     Buttons
+     ========================================= */
+  /* Base button properties for all custom buttons */
+  .button-base {
+    border: none;
     border-radius: 4px;
     cursor: pointer;
+    transition: background-color 0.2s, color 0.2s; /* Added color transition */
   }
 
-  .settings-actions {
-    margin: 15px 0;
-    display: flex;
-    justify-content: flex-end;
+  /* Accent buttons (Add Pattern, Reset to Dropdown) */
+  .add-pattern-button, .reset-to-dropdown-button {
+    background-color: var(--interactive-accent);
+    color: var(--text-on-accent);
+    font-weight: 500;
+  }
+  .add-pattern-button {
+    composes: button-base;
+    padding: 8px 15px;
+    font-size: var(--font-ui-small);
+  }
+  .reset-to-dropdown-button {
+    composes: button-base;
+    padding: 6px 12px;
+    font-size: 13px;
   }
 
+  /* Hover/Active states for accent buttons */
+  .add-pattern-button:hover, .reset-to-dropdown-button:hover { background-color: var(--interactive-accent-hover); }
+  .add-pattern-button:active, .reset-to-dropdown-button:active { background-color: var(--interactive-accent-active); }
+
+  /* Destructive button (Reset to Defaults) */
   .reset-button {
+    composes: button-base;
     background-color: #ff4444;
     color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
-    cursor: pointer;
     font-size: 14px;
-    transition: background-color 0.2s;
+    padding: 8px 16px;
   }
+  .reset-button:hover { background-color: #ff0000; }
+  .reset-button:active { background-color: #cc0000; }
 
-  .reset-button:hover {
-    background-color: #ff0000;
+  /* Text-only button (Delete Pattern) */
+  .delete-button {
+    composes: button-base;
+    background: none;
+    color: var(--text-muted);
+    font-size: 1.4em;
+    padding: 0 5px;
+    line-height: 1;
   }
+  .delete-button:hover { color: var(--text-error); }
 
-  .reset-button:active {
-    background-color: #cc0000;
-  }
-
+  /* =========================================
+     Specific Components and Layouts
+     ========================================= */
   .global-toggle {
-    display: flex;
-    align-items: center;
     justify-content: space-between;
     padding: 10px;
     background-color: var(--background-secondary-alt);
     border-radius: var(--radius-m);
     margin-bottom: 15px;
   }
-  .global-toggle-label {
-    margin-right: 10px;
-    font-weight: 500;
-  }
-  .global-toggle input[type="checkbox"] {
-    transform: scale(1.1);
-  }
+  .global-toggle input[type='checkbox'] { transform: scale(1.1); }
+
   .patterns-heading {
     font-size: var(--font-ui-large);
-    margin-bottom: 10px;
-    margin-top: 0;
+    margin: 0 0 10px 0;
     color: var(--text-normal);
   }
+
   .pattern-editor-item {
     border: 1px solid var(--background-modifier-border);
     border-radius: var(--radius-m);
-    padding: 10px; 
+    padding: 10px;
     margin-bottom: 12px;
     background-color: var(--background-secondary);
     box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     width: 100%;
     box-sizing: border-box;
   }
-  .pattern-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-    flex-wrap: wrap;
+
+  /* Pattern header flex distribution */
+  .pattern-name-input { flex: 1 5 80px; font-weight: 500; }
+  .pattern-field.css-class-field.header-field {
+    flex: 0 0 220px; /* flex-grow flex-shrink flex-basis; fixed width for full text */
+    max-width: 250px;
   }
-  .pattern-name-input {
-    flex-grow: 1;
-    font-size: var(--font-ui-medium);
-    font-weight: 500;
-    padding: 6px 8px;
-    border: 1px solid var(--background-modifier-border);
-    border-radius: var(--radius-s);
-    background-color: var(--background-primary); 
-    color: var(--text-normal);
-    min-width: 150px;
+
+  /* Pattern content grid flex distribution */
+  .pattern-field.regex-field-only { flex: 1 1 90%; }
+  .pattern-field.capture-group-field { flex: 0 0 35px; }
+  .pattern-field.flags-field { flex: 0 0 auto; }
+
+  /* Color input specific styles */
+  .color-preview {
+    width: 12px; height: 12px;
+    border: 1px solid #ccc; border-radius: 2px;
+    margin-right: 5px;
+    vertical-align: middle;
   }
-  .pattern-name-input:focus {
-    border-color: var(--interactive-accent);
-    box-shadow: 0 0 0 1px var(--interactive-accent);
-  }
-  .pattern-controls {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-left: 10px;
-    flex-shrink: 0;
-  }
-  .enabled-toggle {
-    display: flex;
-    align-items: center;
-    gap: 4px; 
-    font-size: var(--font-ui-small);
-    color: var(--text-muted);
+  .default-color input[type='color'] {
+    width: 50px; height: 30px;
+    padding: 0; border: 1px solid #ccc; border-radius: 4px;
     cursor: pointer;
-  }
-  .enabled-toggle input[type="checkbox"] {
-    margin: 0;
-    transform: scale(0.9);
-  }
-  .delete-button {
-    background: none;
-    border: none;
-    color: var(--text-muted);
-    font-size: 1.4em;
-    cursor: pointer;
-    padding: 0 5px;
-    line-height: 1;
-  }
-  .delete-button:hover {
-    color: var(--text-error);
-  }
-  .pattern-content-grid {
-    display: flex;
-    flex-direction: row;
-    gap: 10px;
-    align-items: center;
-  }
-  .pattern-field.regex-field-only {
-    flex-grow: 1;
-    flex-basis: 60%;
-  }
-  .pattern-field.capture-group-field {
-    flex-grow: 0;
-    flex-shrink: 0;
-    width: 80px;
-  }
-  .pattern-field.flags-field {
-    flex-grow: 0;
-    flex-shrink: 0;
-    width: auto;
-  }
-  .pattern-field label {
-    font-size: var(--font-ui-smaller);
-    margin-bottom: 3px;
-    color: var(--text-muted);
-    font-weight: 500;
-  }
-  .pattern-field input[type="text"] {
-    width: 100%;
-    padding: 6px 8px;
-    border: 1px solid var(--background-modifier-border);
-    border-radius: var(--radius-s);
-    background-color: var(--background-primary);
-    color: var(--text-normal);
-    font-size: var(--font-ui-small);
-    box-sizing: border-box;
-  }
-  .pattern-field input:focus,
-  .pattern-name-input:focus,
-  input:focus-visible, 
-  button:focus-visible {
-     border-color: var(--interactive-accent);
-     box-shadow: 0 0 0 1px var(--interactive-accent);
-     outline: 2px solid var(--interactive-accent);
-     outline-offset: 1px;
-  }
-  .add-pattern-button {
-    margin-top: 15px;
-    padding: 8px 15px;
-    font-size: var(--font-ui-small);
-    background-color: var(--interactive-accent);
-    color: var(--text-on-accent);
-    border: none;
-    border-radius: var(--radius-m);
-    cursor: pointer;
-    font-weight: 500;
-  }
-  .add-pattern-button:hover {
-    background-color: var(--interactive-accent-hover);
-  }
-  .flags-group {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 5px;
-  }
-  .flag-group-text {
-    font-size: 0.9em;
-    color: var(--text-muted);
-  }
-  .flags-container {
-    display: flex;
-    gap: 10px;
-  }
-  .flag-checkbox span {
-    display: none;
-  }
-  .color-circle-wrapper {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    overflow: hidden;
-    border: 1px solid var(--background-modifier-border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    flex-shrink: 0;
   }
   .color-input-circle {
-    width: 150%; 
-    height: 150%;
-    border: none;
-    padding: 0;
-    background: none;
+    width: 150%; height: 150%;
+    border: none; padding: 0; background: none;
     cursor: pointer;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
+    -webkit-appearance: none; -moz-appearance: none; appearance: none;
   }
-  .color-input-circle::-webkit-color-swatch-wrapper {
-    padding: 0;
-  }
-  .color-input-circle::-webkit-color-swatch,
-  .color-input-circle::-moz-color-swatch {
-    border: none;
-    border-radius: 50%;
-  }
+  .color-input-circle::-webkit-color-swatch-wrapper { padding: 0; }
+  .color-input-circle::-webkit-color-swatch, .color-input-circle::-moz-color-swatch { border: none; border-radius: 50%; }
+
+  /* Accessibility */
   .visually-hidden {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    margin: -1px;
-    padding: 0;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    border: 0;
+    position: absolute; width: 1px; height: 1px;
+    margin: -1px; padding: 0; overflow: hidden;
+    clip: rect(0, 0, 0, 0); border: 0;
   }
 
-  .pattern-css-class-select {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid var(--background-modifier-border);
-    border-radius: 4px;
-    background-color: var(--background-primary);
-    color: var(--text-normal);
-    font-size: var(--font-ui-small);
-    margin-right: 10px;
-  }
+  /* Specific styles for CSS class fields */
+  .pattern-field.css-class-field.header-field input[type='text'],
+  .pattern-field.css-class-field.header-field select,
+  .pattern-css-class-select { flex-grow: 1; }
 
-  .reset-to-dropdown-button {
-    background-color: var(--interactive-accent);
-    color: white;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 13px;
-    transition: background-color 0.2s;
-    margin-left: 10px;
-  }
+  /* Rely on parent's gap for spacing between select and button within header-field */
+  /* .pattern-css-class-select { margin-right: 10px; } */
+  /* .reset-to-dropdown-button { margin-left: 10px; padding: 6px 12px; font-size: 13px; } */
 
-  .reset-to-dropdown-button:hover {
-    background-color: var(--interactive-accent-hover);
-  }
-
-  .reset-to-dropdown-button:active {
-    background-color: var(--interactive-accent-active);
-  }
-
-  .capture-group-input {
-    width: 4ch;
-    text-align: center;
-  }
-
-  .empty-placeholder::placeholder {
-    color: #888;
-    font-style: italic;
-  }
-
-  .empty-placeholder {
-    color: #888;
-  }
-
-  .add-pattern-row {
-    display: flex;
-    align-items: center;
-    gap: 1.5em;
-  }
-  .add-pattern-row .setting-control {
-    margin-right: 1em;
-  }
-  .add-pattern-row .add-pattern-button {
-    margin-left: auto;
-    white-space: nowrap;
-  }
-
-  .css-class-field input,
-  .css-class-field select {
-    text-align: center;
-  }
-  .css-class-field input::placeholder {
-    text-align: center;
-  }
-
-  /* Styles for the combined regex and flags field */
-  .regex-flags-combined {
-    display: flex;
-    align-items: center;
-    gap: 10px; /* Adjust as needed for spacing */
-    grid-column: 1 / -1; /* Make it span all columns */
-  }
-  
-  .regex-flags-combined input[type="text"] {
-    flex-grow: 1;
-  }
-
-  .flags-group {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 5px;
-  }
-
-  .flags-group label.flag-checkbox {
-    display: flex;
-    align-items: center;
-  }
-
-  .flags-group label.flag-checkbox span {
-    margin-left: 3px;
-  }
-
-  .flags-label-dd {
-    margin-left: 5px;
-    margin-right: 5px;
-  }
+  .css-class-field input::placeholder, .css-class-field input, .css-class-field select { text-align: center; }
+  .flag-checkbox span { margin-left: 3px; }
 </style>
