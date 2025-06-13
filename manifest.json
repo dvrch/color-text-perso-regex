@@ -1,9 +1,9 @@
 {
-  "id": "obsidian-sample-plugin",
+  "id": "obsidian-syntax-highlighter-perso",
   "version": "1.0.0",
-  "name": "Svelte Syntax Highlighter",
+  "name": "Syntax Highlighter Perso",
   "minAppVersion": "1.0.0",
   "isDesktopOnly": false,
-  "description": "This is a sample plugin for Obsidian (https://obsidian.md)",
-  "author": ""
+  "description": "A powerful syntax highlighter for Obsidian that allows you to define custom regex-based highlighting patterns",
+  "author": "dvrch"
 }

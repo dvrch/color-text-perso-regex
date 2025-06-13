@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
 */
 
-import { App, MarkdownView, Modal, Plugin, PluginSettingTab, ItemView, WorkspaceLeaf, type PluginManifest, type Command, type EventRef, type Editor } from 'obsidian';
+import { App, MarkdownView, Plugin, PluginSettingTab, ItemView, WorkspaceLeaf, type PluginManifest } from 'obsidian';
 import SyntaxHighlighterSvelte from './SyntaxHighlighter.svelte';
 import SettingsEditorSvelte from './SettingsEditor.svelte';
-import { mount, unmount, type Svelte4Constructor } from './svelte-utils'; // Import Svelte4Constructor
+import { mount, unmount, type Svelte4Constructor } from './svelte-utils';
 import type { SvelteComponent } from 'svelte';
 
 // Interfaces for settings (remain in main.ts for type safety of plugin core logic)
@@ -52,10 +52,8 @@ export const DEFAULT_SETTINGS: MyPluginSettings = {
 
 // Placeholder/Example for normalizeAndMergeSettings
 export function normalizeAndMergeSettings(
-  loadedData: any, // Should be Partial<MyPluginSettings> or similar
+  loadedData: Partial<MyPluginSettings>,
   defaultSettings: MyPluginSettings
-  // The original function also took defaultPatterns, but it might not be needed if defaultSettings is comprehensive
-  // defaultPatterns: CustomPatternConfig[] 
 ): MyPluginSettings {
   // Start with a deep copy of default settings
   const settings: MyPluginSettings = JSON.parse(JSON.stringify(defaultSettings));
@@ -112,8 +110,8 @@ interface SyntaxHighlighterViewProps {
 }
 
 export class SyntaxHighlighterView extends ItemView {
-  app: App; // Explicitly declare inherited property
-  contentEl: HTMLElement; // Explicitly declare inherited property
+  declare app: App;
+  declare contentEl: HTMLElement;
 
   private svelteComponent: (SvelteComponent & { $set: (props: Partial<SyntaxHighlighterViewProps>) => void }) | undefined;
   private currentContent: string = '';
@@ -179,7 +177,7 @@ export class SyntaxHighlighterView extends ItemView {
 
 export default class MyPlugin extends Plugin {
   settings: MyPluginSettings;
-  app: App; // Explicitly declare inherited property (Plugin class has `readonly app: App;`)
+  declare app: App;
   // manifest: PluginManifest; // Also inherited, declare if used directly and causing errors
 
   constructor(app: App, manifest: PluginManifest) {
@@ -296,8 +294,8 @@ interface SettingsEditorProps {
 
 class SyntaxHighlighterSettingTab extends PluginSettingTab {
   plugin: MyPlugin;
-  app: App; // Explicitly declare inherited property
-  containerEl: HTMLElement; // Explicitly declare inherited property
+  declare app: App;
+  declare containerEl: HTMLElement;
   private svelteComponent: (SvelteComponent & { $set: (props: Partial<SettingsEditorProps>) => void } & { $on: (event: 'updateSettings', callback: (e: CustomEvent<MyPluginSettings>) => void) => void } ) | undefined;
 
 
@@ -320,8 +318,8 @@ class SyntaxHighlighterSettingTab extends PluginSettingTab {
       }
     );
     
-    if (this.svelteComponent && typeof (this.svelteComponent as any).$on === 'function') {
-      (this.svelteComponent as any).$on('updateSettings', (event: CustomEvent<MyPluginSettings>) => {
+    if (this.svelteComponent && typeof this.svelteComponent.$on === 'function') {
+      this.svelteComponent.$on('updateSettings', (event: CustomEvent<MyPluginSettings>) => {
         if (event.detail) { // Ensure detail exists
             this.plugin.settings = event.detail;
             this.plugin.saveSettings();
@@ -336,23 +334,4 @@ class SyntaxHighlighterSettingTab extends PluginSettingTab {
       this.svelteComponent = undefined;
     }
   }
-}
-
-class SampleModal extends Modal {
-  app: App; // Explicitly declare inherited property
-  contentEl: HTMLElement; // Explicitly declare inherited property
-
-	constructor(app: App) {
-		super(app);
-	}
-
-	onOpen() {
-		const {contentEl} = this; // Should now be recognized
-		contentEl.setText('Syntax Highlighter Plugin Active');
-	}
-
-	onClose() {
-		const {contentEl} = this; // Should now be recognized
-		contentEl.empty();
-	}
 }

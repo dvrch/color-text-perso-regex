@@ -1,1 +1,0 @@
-// This file will be deleted. Its contents are now in main.ts.
