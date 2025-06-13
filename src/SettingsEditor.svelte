@@ -1,5 +1,5 @@
 <script>
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { createEventDispatcher } from 'svelte';
   import { DEFAULT_SETTINGS, DEFAULT_PATTERNS } from './SettingsDefaults.svelte';
   // No longer importing MyPluginSettings, CustomPatternConfig from './main'
   // Props are now plain JavaScript, types are not explicitly declared here.
@@ -34,21 +34,6 @@
       "mod-warning",
   ];
 
-  let showCustomClassInput = {};
-
-  // Initialize showCustomClassInput for existing patterns
-  $: if (settings.customPatterns) {
-      settings.customPatterns.forEach(pattern => {
-          // If pattern.cls is not in the predefined list and not the 'custom-input' placeholder
-          if (!availableCssClasses.includes(pattern.cls) && pattern.cls !== 'custom-input') {
-              showCustomClassInput = { ...showCustomClassInput, [pattern.id]: true };
-          } else {
-              // Ensure it's false if it's a known class or new 'custom-input'
-              showCustomClassInput = { ...showCustomClassInput, [pattern.id]: false };
-          }
-      });
-  }
-
   function notifyChange() {
     // Dispatch the current state of settings.
     // The receiving end in main.ts still expects an object matching MyPluginSettings structure.
@@ -67,55 +52,21 @@
       captureGroup: ""
     };
     settings.customPatterns = [...settings.customPatterns, newPattern];
-    // For new patterns, we assume it's from the dropdown by default
-    showCustomClassInput = { ...showCustomClassInput, [newPattern.id]: false };
     notifyChange();
   }
 
   function deletePattern(idToDelete) {
     settings.customPatterns = settings.customPatterns.filter(p => p.id !== idToDelete);
-    // Also remove its state from showCustomClassInput
-    const newShowCustomClassInput = { ...showCustomClassInput };
-    delete newShowCustomClassInput[idToDelete];
-    showCustomClassInput = newShowCustomClassInput;
     notifyChange();
   }
 
   function resetToDefaults() {
     settings = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
-    // Re-initialize showCustomClassInput after reset
-    showCustomClassInput = {};
-    settings.customPatterns.forEach(pattern => {
-        if (!availableCssClasses.includes(pattern.cls)) {
-            showCustomClassInput = { ...showCustomClassInput, [pattern.id]: true };
-        }
-    });
     notifyChange();
   }
 
   function getDefaultValue(field) {
     return DEFAULT_SETTINGS[field];
-  }
-
-  function handleClsSelection(patternId, event) {
-      const selectedValue = event.target.value;
-      const pattern = settings.customPatterns.find(p => p.id === patternId);
-      if (pattern) {
-          if (selectedValue === 'custom-input') {
-              showCustomClassInput = { ...showCustomClassInput, [patternId]: true };
-              pattern.cls = ''; // Clear current value to prompt user to type
-          } else {
-              showCustomClassInput = { ...showCustomClassInput, [patternId]: false };
-              pattern.cls = selectedValue;
-          }
-      }
-      notifyChange();
-  }
-
-  // Ensure settings.customPatterns is always an array
-  if (!Array.isArray(settings.customPatterns)) {
-    settings.customPatterns = [];
-    // notifyChange(); // Not strictly needed on init unless settings was passed as non-array
   }
 </script>
 
@@ -175,23 +126,31 @@
         <div class="pattern-controls">
           <div class="pattern-field css-class-field header-field">
             <label for={`cls-${pattern.id}`} class="visually-hidden">CSS Class</label>
-            {#if showCustomClassInput[pattern.id]}
+            {#if !availableCssClasses.includes(pattern.cls)}
               <input
                 id={`cls-${pattern.id}`}
                 type="text"
-                placeholder="Custom CSS Class"
+                placeholder="css class"
                 bind:value={pattern.cls}
                 on:input={notifyChange}
                 aria-label="Custom CSS class for pattern {pattern.name}"
+                class="{pattern.cls === '' ? 'empty-placeholder' : ''}"
               />
-              <button on:click={() => {showCustomClassInput = { ...showCustomClassInput, [pattern.id]: false }; pattern.cls = availableCssClasses[0]; notifyChange();}} class="reset-to-dropdown-button">
+              <button on:click={() => {pattern.cls = availableCssClasses[0]; notifyChange();}} class="reset-to-dropdown-button">
                 Select from list
               </button>
             {:else}
               <select
                 id={`cls-${pattern.id}`}
                 bind:value={pattern.cls}
-                on:change={(e) => handleClsSelection(pattern.id, e)}
+                on:change={(e) => {
+                    if (e.target.value === 'custom-input') {
+                        pattern.cls = ''; // Clear value to allow custom input
+                    } else {
+                        pattern.cls = e.target.value; // Set value from dropdown
+                    }
+                    notifyChange();
+                }}
                 aria-label="CSS class for pattern {pattern.name}"
                 class="pattern-css-class-select"
               >
@@ -234,7 +193,7 @@
       </div>
       <div class="pattern-content-grid">
         <div class="pattern-field regex-field">
-          <label for={`regex-${pattern.id}`}>Regex</label>
+          <label for={`regex-${pattern.id}`} class="visually-hidden">Regex</label>
           <input 
             id={`regex-${pattern.id}`} 
             type="text" 
@@ -245,21 +204,20 @@
           />
         </div>
         <div class="pattern-field capture-group-field">
-          <label for={`captureGroup-${pattern.id}`}>Capture Group</label>
           <input 
             id={`captureGroup-${pattern.id}`} 
             type="number" 
             min="0"
-            max="99"
-            placeholder="e.g., 0-99" 
+            max="9"
+            placeholder="0-9" 
             bind:value={pattern.captureGroup} 
             on:input={notifyChange}
-            aria-label="Capture group index for pattern {pattern.name}"
+            aria-label="Capture group index for pattern [0-9] {pattern.name}"
+            size="4"
           />
         </div>
         <div class="pattern-field flags-field">
           <div class="flags-group">
-            <label id={`flags-label-${pattern.id}`} for={`flags-group-${pattern.id}`}>Flags (g, m, i)</label>
             <div 
               id={`flags-group-${pattern.id}`}
               class="flags-container" 
@@ -426,6 +384,8 @@
     margin-bottom: 12px;
     background-color: var(--background-secondary);
     box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    width: 100%;
+    box-sizing: border-box;
   }
   .pattern-header {
     display: flex;
@@ -482,10 +442,9 @@
   }
   .pattern-content-grid {
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr; /* Regex, Capture Group, Flags */
-    gap: 8px 10px;
-    align-items: start;
-    margin-top: 10px;
+    grid-template-columns: 1fr auto auto;
+    gap: 10px;
+    align-items: end;
   }
   .pattern-field {
     display: flex;
@@ -531,9 +490,7 @@
     background-color: var(--interactive-accent-hover);
   }
   .flags-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+    margin-top: 0;
   }
   .flags-container {
     display: flex;
@@ -658,5 +615,14 @@
       display: flex;
       align-items: center;
       gap: 10px; /* Space between input/select and button */
+  }
+
+  .empty-placeholder::placeholder {
+    color: #888; /* Grey color for placeholder */
+    font-style: italic;
+  }
+
+  .empty-placeholder {
+    color: #888; /* Ensure actual text is also grey if nothing is typed */
   }
 </style>
