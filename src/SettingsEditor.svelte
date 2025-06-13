@@ -1,5 +1,5 @@
 <script>
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, onMount } from 'svelte';
   import { DEFAULT_SETTINGS, DEFAULT_PATTERNS } from './SettingsDefaults.svelte';
   // No longer importing MyPluginSettings, CustomPatternConfig from './main'
   // Props are now plain JavaScript, types are not explicitly declared here.
@@ -7,6 +7,47 @@
   export let settings; // Expects an object with enableGlobalSyntaxHighlighting and customPatterns array
 
   const dispatch = createEventDispatcher(); // Event detail will be a plain JS object
+
+  const availableCssClasses = [
+      "custom-dj-highlight",
+      "tag-dj",
+      "date-dj",
+      "key-dj",
+      "func-dj",
+      "comm-dj",
+      "type-dj",
+      "op-dj",
+      "num-dj",
+      "ponct-dj",
+      "sent-dj",
+      "caps-dj",
+      "delim-g-open-dj",
+      "delim-g-close-dj",
+      "cm-s-obsidian",
+      "cm-formatting-hashtag",
+      "cm-hashtag",
+      "cm-url",
+      "cm-strong",
+      "cm-em",
+      "cm-comment",
+      "is-active",
+      "mod-warning",
+  ];
+
+  let showCustomClassInput = {};
+
+  // Initialize showCustomClassInput for existing patterns
+  $: if (settings.customPatterns) {
+      settings.customPatterns.forEach(pattern => {
+          // If pattern.cls is not in the predefined list and not the 'custom-input' placeholder
+          if (!availableCssClasses.includes(pattern.cls) && pattern.cls !== 'custom-input') {
+              showCustomClassInput = { ...showCustomClassInput, [pattern.id]: true };
+          } else {
+              // Ensure it's false if it's a known class or new 'custom-input'
+              showCustomClassInput = { ...showCustomClassInput, [pattern.id]: false };
+          }
+      });
+  }
 
   function notifyChange() {
     // Dispatch the current state of settings.
@@ -21,26 +62,54 @@
       enabled: true,
       regex: "",
       flags: "gm",
-      cls: "custom-dj-highlight",
+      cls: availableCssClasses[0], // Set initial class to a default from the list
       color: "#FFFF00",
       captureGroup: ""
     };
     settings.customPatterns = [...settings.customPatterns, newPattern];
+    // For new patterns, we assume it's from the dropdown by default
+    showCustomClassInput = { ...showCustomClassInput, [newPattern.id]: false };
     notifyChange();
   }
 
   function deletePattern(idToDelete) {
     settings.customPatterns = settings.customPatterns.filter(p => p.id !== idToDelete);
+    // Also remove its state from showCustomClassInput
+    const newShowCustomClassInput = { ...showCustomClassInput };
+    delete newShowCustomClassInput[idToDelete];
+    showCustomClassInput = newShowCustomClassInput;
     notifyChange();
   }
 
   function resetToDefaults() {
     settings = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
+    // Re-initialize showCustomClassInput after reset
+    showCustomClassInput = {};
+    settings.customPatterns.forEach(pattern => {
+        if (!availableCssClasses.includes(pattern.cls)) {
+            showCustomClassInput = { ...showCustomClassInput, [pattern.id]: true };
+        }
+    });
     notifyChange();
   }
 
   function getDefaultValue(field) {
     return DEFAULT_SETTINGS[field];
+  }
+
+  function handleClsSelection(patternId, event) {
+      const selectedValue = event.target.value;
+      const pattern = settings.customPatterns.find(p => p.id === patternId);
+      if (pattern) {
+          if (selectedValue === 'custom-input') {
+              showCustomClassInput = { ...showCustomClassInput, [patternId]: true };
+              pattern.cls = ''; // Clear current value to prompt user to type
+          } else {
+              showCustomClassInput = { ...showCustomClassInput, [patternId]: false };
+              pattern.cls = selectedValue;
+          }
+      }
+      notifyChange();
   }
 
   // Ensure settings.customPatterns is always an array
@@ -106,14 +175,32 @@
         <div class="pattern-controls">
           <div class="pattern-field css-class-field header-field">
             <label for={`cls-${pattern.id}`} class="visually-hidden">CSS Class</label>
-            <input 
-              id={`cls-${pattern.id}`} 
-              type="text" 
-              placeholder="CSS Class" 
-              bind:value={pattern.cls} 
-              on:input={notifyChange}
-              aria-label="CSS class for pattern {pattern.name}"
-            />
+            {#if showCustomClassInput[pattern.id]}
+              <input
+                id={`cls-${pattern.id}`}
+                type="text"
+                placeholder="Custom CSS Class"
+                bind:value={pattern.cls}
+                on:input={notifyChange}
+                aria-label="Custom CSS class for pattern {pattern.name}"
+              />
+              <button on:click={() => {showCustomClassInput = { ...showCustomClassInput, [pattern.id]: false }; pattern.cls = availableCssClasses[0]; notifyChange();}} class="reset-to-dropdown-button">
+                Select from list
+              </button>
+            {:else}
+              <select
+                id={`cls-${pattern.id}`}
+                bind:value={pattern.cls}
+                on:change={(e) => handleClsSelection(pattern.id, e)}
+                aria-label="CSS class for pattern {pattern.name}"
+                class="pattern-css-class-select"
+              >
+                {#each availableCssClasses as clsOption}
+                  <option value={clsOption}>{clsOption}</option>
+                {/each}
+                <option value="custom-input">Enter Custom...</option>
+              </select>
+            {/if}
           </div>
           <div class="color-circle-wrapper">
             <label for={`color-${pattern.id}`} class="visually-hidden">Color</label>
@@ -532,5 +619,44 @@
     .header-field {
       width: 100%;
     }
+  }
+
+  /* New styles for the dropdown and custom input toggle button */
+  .pattern-css-class-select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 4px;
+    background-color: var(--background-primary);
+    color: var(--text-normal);
+    font-size: var(--font-ui-small);
+    margin-right: 10px; /* Space between select and other controls if needed */
+  }
+
+  .reset-to-dropdown-button {
+    background-color: var(--interactive-accent);
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background-color 0.2s;
+    margin-left: 10px; /* Adjust spacing as needed */
+  }
+
+  .reset-to-dropdown-button:hover {
+    background-color: var(--interactive-accent-hover);
+  }
+
+  .reset-to-dropdown-button:active {
+    background-color: var(--interactive-accent-active);
+  }
+
+  /* Adjust the pattern-field to accommodate the button */
+  .pattern-field.css-class-field {
+      display: flex;
+      align-items: center;
+      gap: 10px; /* Space between input/select and button */
   }
 </style>
