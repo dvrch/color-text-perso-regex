@@ -1,0 +1,28 @@
+<script context="module">
+  // SettingsDefaults.svelte
+  // This component exports default settings and patterns. It has no visual output.
+
+  // Default patterns (plain JavaScript objects)
+  export const DEFAULT_PATTERNS = [
+    { id: 'dj-comment', name: 'DJ Comments (#...)', enabled: true, regex: '#.*$', flags: 'gm', cls: 'comm-dj', color: '#16FF00', captureGroup: '' },
+    { id: 'dj-numbers', name: 'DJ Numbers', enabled: true, regex: '\\b(?:0[xX][0-9a-fA-F]+|0[oO][0-7]+|0[bB][01]+|[0-9]+\\.[0-9]*(?:[eE][+-]?[0-9]+)?|[0-9]+)\\b', flags: 'g', cls: 'num-dj', color: '#AE81FF', captureGroup: '' },
+    { id: 'dj-operators', name: 'DJ Operators', enabled: true, regex: '\\+|-|\\*|\\/|\\/\\/|\\|\\||\\\\|%|@|<<|>>|&|\\||\\^|~|<|>|<=|>=|==|!=|:=|=', flags: 'g', cls: 'op-dj', color: '#F92672', captureGroup: '' },
+    { id: 'dj-punctuation', name: 'DJ Punctuation', enabled: true, regex: '[.,;:?!|µ]', flags: 'g', cls: 'ponct-dj', color: '#A8F819', captureGroup: '' },
+    { id: 'dj-class-def', name: 'DJ Class Name', enabled: true, regex: '\\bclass\\s+([a-zA-Z_][a-zA-Z0-9_]*)', flags: 'g', cls: 'type-dj', color: '#66D9EF', captureGroup: '1' },
+    { id: 'dj-function-call', name: 'DJ Function Names/Calls', enabled: true, regex: '([a-zA-Z_][a-zA-Z0-9_]*)\\s*\\(', flags: 'g', cls: 'func-dj', color: '#A6E22E', captureGroup: '1' },
+    { id: 'dj-keywords', name: 'DJ Keywords', enabled: true, regex: '\\b(and|as|assert|async|await|break|class|continue|def|del|elif|else|except|finally|for|from|global|if|import|in|is|lambda|nonlocal|not|or|pass|raise|return|try|while|with|yield)\\b', flags: 'g', cls: 'key-dj', color: '#F92672', captureGroup: '' },
+    { id: 'dj-sentence-caps', name: 'DJ Sentence Start Capitals', enabled: true, regex: '(?:^|[.!?]\\s+)([A-Z])', flags: 'g', cls: 'sent-dj', color: '#66D9EF', captureGroup: '1' },
+    { id: 'dj-general-caps', name: 'DJ Capital Letters', enabled: true, regex: '([A-Z])', flags: 'g', cls: 'caps-dj', color: '#A6E22E', captureGroup: '1' },
+    { id: 'dj-delim-open', name: 'DJ Delimiters (Open)', enabled: true, regex: '\\(|\\{|\\[|\\"|«|<|_', flags: 'g', cls: 'delim-g-open-dj', color: '#E6AA74', captureGroup: '' },
+    { id: 'dj-delim-close', name: 'DJ Delimiters (Close)', enabled: true, regex: '\\)|\\}|\\]|\\"|»|>|_', flags: 'g', cls: 'delim-g-close-dj', color: '#FF0000', captureGroup: '' },
+  ];
+
+  // Default settings (plain JavaScript object)
+  export const DEFAULT_SETTINGS = {
+    enableGlobalSyntaxHighlighting: true,
+    customPatterns: JSON.parse(JSON.stringify(DEFAULT_PATTERNS)), // Deep copy for initial state
+  };
+</script>
+
+<!-- This Svelte component is used only for its module script to export constants. -->
+<!-- It does not render any HTML. -->
