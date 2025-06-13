@@ -87,7 +87,7 @@
     </div>
   </div>
 
-  <div class="setting-item default-color">
+  <div class="setting-item default-color add-pattern-row">
     <label for="defaultTextColor" class="default-color-label">
       Default Text Color
     </label>
@@ -101,17 +101,14 @@
       />
       <span class="default-value">Default: <span class="color-preview" style="background-color: {getDefaultValue('defaultTextColor')}"></span> {getDefaultValue('defaultTextColor')}</span>
     </div>
-  </div>
-
-  <div class="settings-actions">
-    <button on:click={resetToDefaults} class="reset-button" title="Reset to default settings">
-      Reset to Defaults
+    <button on:click={addPattern} class="add-pattern-button" title="Add a new pattern">
+      Add Pattern
     </button>
   </div>
 
   <h3 class="patterns-heading">Highlighting Patterns</h3>
   
-  {#each settings.customPatterns as pattern (pattern.id)}
+  {#each settings.customPatterns.slice().reverse() as pattern (pattern.id)}
     <div class="pattern-editor-item" role="group" aria-labelledby={`pattern-name-${pattern.id}`}>
       <div class="pattern-header">
         <input 
@@ -123,14 +120,12 @@
           id={`pattern-name-${pattern.id}`}
           aria-label="Pattern name"
         />
-        <div class="pattern-controls">
-          <div class="pattern-field css-class-field header-field">
-            <label for={`cls-${pattern.id}`} class="visually-hidden">CSS Class</label>
+        <div class="pattern-field css-class-field header-field">
             {#if !availableCssClasses.includes(pattern.cls)}
               <input
                 id={`cls-${pattern.id}`}
                 type="text"
-                placeholder="css class"
+                placeholder="css-class"
                 bind:value={pattern.cls}
                 on:input={notifyChange}
                 aria-label="Custom CSS class for pattern {pattern.name}"
@@ -160,7 +155,8 @@
                 <option value="custom-input">Enter Custom...</option>
               </select>
             {/if}
-          </div>
+        </div>
+        <div class="pattern-controls">
           <div class="color-circle-wrapper">
             <label for={`color-${pattern.id}`} class="visually-hidden">Color</label>
             <input 
@@ -192,8 +188,7 @@
         </div>
       </div>
       <div class="pattern-content-grid">
-        <div class="pattern-field regex-field">
-          <label for={`regex-${pattern.id}`} class="visually-hidden">Regex</label>
+        <div class="pattern-field regex-field-only">
           <input 
             id={`regex-${pattern.id}`} 
             type="text" 
@@ -209,76 +204,72 @@
             type="number" 
             min="0"
             max="9"
-            placeholder="0-9" 
+            placeholder="e.g., 0-99" 
             bind:value={pattern.captureGroup} 
             on:input={notifyChange}
             aria-label="Capture group index for pattern [0-9] {pattern.name}"
             size="4"
+            class="capture-group-input"
           />
         </div>
         <div class="pattern-field flags-field">
           <div class="flags-group">
-            <div 
-              id={`flags-group-${pattern.id}`}
-              class="flags-container" 
-              role="group" 
-              aria-labelledby={`flags-label-${pattern.id}`}
-            >
-              <label class="flag-checkbox" for={`flag-g-${pattern.id}`}>
-                <input 
-                  id={`flag-g-${pattern.id}`}
-                  type="checkbox" 
-                  checked={pattern.flags.includes('g')}
-                  on:change={(e) => {
-                    const newFlags = e.target.checked 
-                      ? pattern.flags + 'g'
-                      : pattern.flags.replace('g', '');
-                    pattern.flags = newFlags;
-                    notifyChange();
-                  }}
-                />
-                <span>g</span>
-              </label>
-              <label class="flag-checkbox" for={`flag-m-${pattern.id}`}>
-                <input 
-                  id={`flag-m-${pattern.id}`}
-                  type="checkbox" 
-                  checked={pattern.flags.includes('m')}
-                  on:change={(e) => {
-                    const newFlags = e.target.checked 
-                      ? pattern.flags + 'm'
-                      : pattern.flags.replace('m', '');
-                    pattern.flags = newFlags;
-                    notifyChange();
-                  }}
-                />
-                <span>m</span>
-              </label>
-              <label class="flag-checkbox" for={`flag-i-${pattern.id}`}>
-                <input 
-                  id={`flag-i-${pattern.id}`}
-                  type="checkbox" 
-                  checked={pattern.flags.includes('i')}
-                  on:change={(e) => {
-                    const newFlags = e.target.checked 
-                      ? pattern.flags + 'i'
-                      : pattern.flags.replace('i', '');
-                    pattern.flags = newFlags;
-                    notifyChange();
-                  }}
-                />
-                <span>i</span>
-              </label>
-            </div>
+            <label class="flag-checkbox" for={`flag-g-${pattern.id}`} title="Global">
+              <input 
+                id={`flag-g-${pattern.id}`}
+                type="checkbox" 
+                checked={pattern.flags.includes('g')}
+                on:change={(e) => {
+                  const newFlags = e.target.checked 
+                    ? pattern.flags + 'g'
+                    : pattern.flags.replace('g', '');
+                  pattern.flags = newFlags;
+                  notifyChange();
+                }}
+              />
+              <span>g</span>
+            </label>
+            <label class="flag-checkbox" for={`flag-m-${pattern.id}`} title="Multiline">
+              <input 
+                id={`flag-m-${pattern.id}`}
+                type="checkbox" 
+                checked={pattern.flags.includes('m')}
+                on:change={(e) => {
+                  const newFlags = e.target.checked 
+                    ? pattern.flags + 'm'
+                    : pattern.flags.replace('m', '');
+                  pattern.flags = newFlags;
+                  notifyChange();
+                }}
+              />
+              <span>m</span>
+            </label>
+            <label class="flag-checkbox" for={`flag-i-${pattern.id}`} title="Case Insensitive">
+              <input 
+                id={`flag-i-${pattern.id}`}
+                type="checkbox" 
+                checked={pattern.flags.includes('i')}
+                on:change={(e) => {
+                  const newFlags = e.target.checked 
+                    ? pattern.flags + 'i'
+                    : pattern.flags.replace('i', '');
+                  pattern.flags = newFlags;
+                  notifyChange();
+                }}
+              />
+              <span>i</span>
+            </label>
           </div>
         </div>
       </div>
     </div>
   {/each}
 
-  <button on:click={addPattern} class="add-pattern-button">
-    + Add New Pattern
-  </button>
+  <div class="settings-actions">
+    <button on:click={resetToDefaults} class="reset-button" title="Reset to default settings">
+      Reset to Defaults
+    </button>
+  </div>
 </div>
 
 <style>
@@ -441,14 +432,24 @@
     color: var(--text-error);
   }
   .pattern-content-grid {
-    display: grid;
-    grid-template-columns: 1fr auto auto;
-    gap: 10px;
-    align-items: end;
-  }
-  .pattern-field {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    gap: 10px;
+    align-items: center;
+  }
+  .pattern-field.regex-field-only {
+    flex-grow: 1;
+    flex-basis: 60%;
+  }
+  .pattern-field.capture-group-field {
+    flex-grow: 0;
+    flex-shrink: 0;
+    width: 80px;
+  }
+  .pattern-field.flags-field {
+    flex-grow: 0;
+    flex-shrink: 0;
+    width: auto;
   }
   .pattern-field label {
     font-size: var(--font-ui-smaller);
@@ -490,24 +491,21 @@
     background-color: var(--interactive-accent-hover);
   }
   .flags-group {
-    margin-top: 0;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 5px;
+  }
+  .flag-group-text {
+    font-size: 0.9em;
+    color: var(--text-muted);
   }
   .flags-container {
     display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap; 
+    gap: 10px;
   }
-  .flags-container label {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    cursor: pointer;
-  }
-  .flags-container label input[type="checkbox"] {
-    margin: 0;
-  }
-  .flags-container label span {
-    font-size: 0.9em; 
+  .flag-checkbox span {
+    display: none;
   }
   .color-circle-wrapper {
     width: 28px;
@@ -551,34 +549,6 @@
     border: 0;
   }
 
-  .header-field {
-    flex-basis: 100px;
-    flex-shrink: 1;
-    min-width: 0;
-  }
-
-  /* Responsive adjustments for specific fields */
-  @media (max-width: 768px) {
-    .pattern-content-grid {
-      grid-template-columns: 1fr; /* Stack all fields */
-    }
-    .pattern-header {
-      flex-direction: column;
-      align-items: flex-start;
-    }
-    .pattern-controls {
-      margin-top: 10px;
-      margin-left: 0;
-      width: 100%;
-      justify-content: flex-end; 
-    }
-    .pattern-name-input,
-    .header-field {
-      width: 100%;
-    }
-  }
-
-  /* New styles for the dropdown and custom input toggle button */
   .pattern-css-class-select {
     width: 100%;
     padding: 8px;
@@ -587,7 +557,7 @@
     background-color: var(--background-primary);
     color: var(--text-normal);
     font-size: var(--font-ui-small);
-    margin-right: 10px; /* Space between select and other controls if needed */
+    margin-right: 10px;
   }
 
   .reset-to-dropdown-button {
@@ -599,7 +569,7 @@
     cursor: pointer;
     font-size: 13px;
     transition: background-color 0.2s;
-    margin-left: 10px; /* Adjust spacing as needed */
+    margin-left: 10px;
   }
 
   .reset-to-dropdown-button:hover {
@@ -610,19 +580,71 @@
     background-color: var(--interactive-accent-active);
   }
 
-  /* Adjust the pattern-field to accommodate the button */
-  .pattern-field.css-class-field {
-      display: flex;
-      align-items: center;
-      gap: 10px; /* Space between input/select and button */
+  .capture-group-input {
+    width: 4ch;
+    text-align: center;
   }
 
   .empty-placeholder::placeholder {
-    color: #888; /* Grey color for placeholder */
+    color: #888;
     font-style: italic;
   }
 
   .empty-placeholder {
-    color: #888; /* Ensure actual text is also grey if nothing is typed */
+    color: #888;
+  }
+
+  .add-pattern-row {
+    display: flex;
+    align-items: center;
+    gap: 1.5em;
+  }
+  .add-pattern-row .setting-control {
+    margin-right: 1em;
+  }
+  .add-pattern-row .add-pattern-button {
+    margin-left: auto;
+    white-space: nowrap;
+  }
+
+  .css-class-field input,
+  .css-class-field select {
+    text-align: center;
+  }
+  .css-class-field input::placeholder {
+    text-align: center;
+  }
+
+  /* Styles for the combined regex and flags field */
+  .regex-flags-combined {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Adjust as needed for spacing */
+    grid-column: 1 / -1; /* Make it span all columns */
+  }
+  
+  .regex-flags-combined input[type="text"] {
+    flex-grow: 1;
+  }
+
+  .flags-group {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .flags-group label.flag-checkbox {
+    display: flex;
+    align-items: center;
+  }
+
+  .flags-group label.flag-checkbox span {
+    margin-left: 3px;
+  }
+
+  .flags-label-dd {
+    margin-left: 5px;
+    margin-right: 5px;
   }
 </style>
