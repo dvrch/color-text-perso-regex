@@ -1,9 +1,26 @@
-<script context="module">
+<script context="module" lang="ts">
   // SettingsDefaults.svelte
   // This component exports default settings and patterns. It has no visual output.
 
+  export interface CustomPatternConfig {
+    id: string;
+    name: string;
+    enabled: boolean;
+    regex: string;
+    flags: string;
+    cls: string;
+    color: string;
+    captureGroup: string;
+  }
+
+  export interface MyPluginSettings {
+    enableGlobalSyntaxHighlighting: boolean;
+    defaultTextColor: string;
+    customPatterns: CustomPatternConfig[];
+  }
+
   // Default patterns (plain JavaScript objects)
-  export const DEFAULT_PATTERNS = [
+  export const DEFAULT_PATTERNS: CustomPatternConfig[] = [
     { id: 'dj-comment', name: 'DJ Comments (#...)', enabled: true, regex: '#.*$', flags: 'gm', cls: 'comm-dj', color: '#16FF00', captureGroup: '' },
     { id: 'dj-numbers', name: 'DJ Numbers', enabled: true, regex: '\\b(?:0[xX][0-9a-fA-F]+|0[oO][0-7]+|0[bB][01]+|[0-9]+\\.[0-9]*(?:[eE][+-]?[0-9]+)?|[0-9]+)\\b', flags: 'g', cls: 'num-dj', color: '#AE81FF', captureGroup: '' },
     { id: 'dj-operators', name: 'DJ Operators', enabled: true, regex: '\\+|-|\\*|\\/|\\/\\/|\\|\\||\\\\|%|@|<<|>>|&|\\||\\^|~|<|>|<=|>=|==|!=|:=|=', flags: 'g', cls: 'op-dj', color: '#F92672', captureGroup: '' },
@@ -20,7 +37,7 @@
   ];
 
   // Default settings (plain JavaScript object)
-  export const DEFAULT_SETTINGS = {
+  export const DEFAULT_SETTINGS: MyPluginSettings = {
     enableGlobalSyntaxHighlighting: true,
     defaultTextColor: '#808080', // Gris par défaut
     customPatterns: JSON.parse(JSON.stringify(DEFAULT_PATTERNS)), // Deep copy for initial state

@@ -1,10 +1,8 @@
-<script>
+<script lang="ts">
   import { createEventDispatcher } from 'svelte';
-  import { DEFAULT_SETTINGS, DEFAULT_PATTERNS } from './SettingsDefaults.svelte';
-  // No longer importing MyPluginSettings, CustomPatternConfig from './main'
-  // Props are now plain JavaScript, types are not explicitly declared here.
+  import { DEFAULT_SETTINGS, DEFAULT_PATTERNS, type MyPluginSettings, type CustomPatternConfig } from './SettingsDefaults.svelte';
 
-  export let settings; // Expects an object with enableGlobalSyntaxHighlighting and customPatterns array
+  export let settings: MyPluginSettings; // Expects an object with enableGlobalSyntaxHighlighting and customPatterns array
 
   const dispatch = createEventDispatcher(); // Event detail will be a plain JS object
 
@@ -41,7 +39,7 @@
   }
 
   function addPattern() {
-    const newPattern = { // Plain JavaScript object, matches CustomPatternConfig structure
+    const newPattern: CustomPatternConfig = { // Plain JavaScript object, matches CustomPatternConfig structure
       id: `custom-pattern-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
       name: `New Pattern ${settings.customPatterns.length + 1}`,
       enabled: true,
@@ -55,7 +53,7 @@
     notifyChange();
   }
 
-  function deletePattern(idToDelete) {
+  function deletePattern(idToDelete: string) {
     settings.customPatterns = settings.customPatterns.filter(p => p.id !== idToDelete);
     notifyChange();
   }
@@ -65,8 +63,39 @@
     notifyChange();
   }
 
-  function getDefaultValue(field) {
+  function getDefaultValue<T extends keyof MyPluginSettings>(field: T): MyPluginSettings[T] {
     return DEFAULT_SETTINGS[field];
+  }
+
+  // Function to handle CSS class selection from dropdown
+  function handleClsSelection(e: Event, pattern: CustomPatternConfig) {
+    const target = e.target as HTMLSelectElement;
+    if (target.value === 'custom-input') {
+      pattern.cls = ''; // Clear value to allow custom input
+    } else {
+      pattern.cls = target.value; // Set value from dropdown
+    }
+    notifyChange();
+  }
+
+  // Function to handle checkbox changes (e.g., enabled, flags)
+  function handleCheckboxChange(e: Event, bindingTarget: any, property: string) {
+    const target = e.target as HTMLInputElement;
+    bindingTarget[property] = target.checked;
+    notifyChange();
+  }
+
+  // Function to handle flag changes (g, m, i)
+  function handleFlagChange(e: Event, pattern: CustomPatternConfig, flag: 'g' | 'm' | 'i') {
+    const target = e.target as HTMLInputElement;
+    if (target.checked) {
+      if (!pattern.flags.includes(flag)) {
+        pattern.flags += flag;
+      }
+    } else {
+      pattern.flags = pattern.flags.replace(flag, '');
+    }
+    notifyChange();
   }
 </script>
 
@@ -80,7 +109,7 @@
         type="checkbox" 
         id="enableGlobalSyntaxHighlighting" 
         bind:checked={settings.enableGlobalSyntaxHighlighting} 
-        on:change={notifyChange}
+        on:change={(e) => handleCheckboxChange(e, settings, 'enableGlobalSyntaxHighlighting')}
         aria-labelledby="enableGlobalSyntaxHighlightingLabel"
       />
       <span class="default-value">Default: {getDefaultValue('enableGlobalSyntaxHighlighting') ? 'Enabled' : 'Disabled'}</span>
@@ -138,14 +167,7 @@
               <select
                 id={`cls-${pattern.id}`}
                 bind:value={pattern.cls}
-                on:change={(e) => {
-                    if (e.target.value === 'custom-input') {
-                        pattern.cls = ''; // Clear value to allow custom input
-                    } else {
-                        pattern.cls = e.target.value; // Set value from dropdown
-                    }
-                    notifyChange();
-                }}
+                on:change={(e) => handleClsSelection(e, pattern)}
                 aria-label="CSS class for pattern {pattern.name}"
                 class="pattern-css-class-select"
               >
@@ -172,7 +194,7 @@
             <input 
               type="checkbox" 
               bind:checked={pattern.enabled} 
-              on:change={notifyChange} 
+              on:change={(e) => handleCheckboxChange(e, pattern, 'enabled')} 
               aria-label="Enable pattern {pattern.name}"
             />
             <span>Enabled</span>
@@ -200,64 +222,36 @@
         </div>
         <div class="pattern-field capture-group-field">
           <input 
-            id={`captureGroup-${pattern.id}`} 
-            type="number" 
-            min="0"
-            max="9"
-            placeholder="0-9" 
+            id={`capture-group-${pattern.id}`} 
+            type="text" 
+            placeholder="e.g., 0-99" 
             bind:value={pattern.captureGroup} 
             on:input={notifyChange}
-            aria-label="Capture group index for pattern [0-9] {pattern.name}"
-            size="4"
-            class="capture-group-input"
+            aria-label="Capture group for pattern {pattern.name}"
           />
         </div>
         <div class="pattern-field flags-field">
-          <div class="flags-group">
-            <label class="flag-checkbox" for={`flag-g-${pattern.id}`} title="Global">
-              <input 
-                id={`flag-g-${pattern.id}`}
-                type="checkbox" 
+          <div class="flags-checkboxes">
+            <label title="Global match (find all matches rather than stopping after the first)">
+              <input
+                type="checkbox"
                 checked={pattern.flags.includes('g')}
-                on:change={(e) => {
-                  const newFlags = e.target.checked 
-                    ? pattern.flags + 'g'
-                    : pattern.flags.replace('g', '');
-                  pattern.flags = newFlags;
-                  notifyChange();
-                }}
-              />
-              <span>g</span>
+                on:change={(e) => handleFlagChange(e, pattern, 'g')}
+              /> g
             </label>
-            <label class="flag-checkbox" for={`flag-m-${pattern.id}`} title="Multiline">
-              <input 
-                id={`flag-m-${pattern.id}`}
-                type="checkbox" 
+            <label title="Multiline match (allow ^ and $ to match start/end of lines)">
+              <input
+                type="checkbox"
                 checked={pattern.flags.includes('m')}
-                on:change={(e) => {
-                  const newFlags = e.target.checked 
-                    ? pattern.flags + 'm'
-                    : pattern.flags.replace('m', '');
-                  pattern.flags = newFlags;
-                  notifyChange();
-                }}
-              />
-              <span>m</span>
+                on:change={(e) => handleFlagChange(e, pattern, 'm')}
+              /> m
             </label>
-            <label class="flag-checkbox" for={`flag-i-${pattern.id}`} title="Case Insensitive">
-              <input 
-                id={`flag-i-${pattern.id}`}
-                type="checkbox" 
+            <label title="Case-insensitive match (ignore case)">
+              <input
+                type="checkbox"
                 checked={pattern.flags.includes('i')}
-                on:change={(e) => {
-                  const newFlags = e.target.checked 
-                    ? pattern.flags + 'i'
-                    : pattern.flags.replace('i', '');
-                  pattern.flags = newFlags;
-                  notifyChange();
-                }}
-              />
-              <span>i</span>
+                on:change={(e) => handleFlagChange(e, pattern, 'i')}
+              /> i
             </label>
           </div>
         </div>
@@ -281,7 +275,7 @@
   }
 
   /* Generic flex container for form items */
-  .setting-item, .setting-control, .default-color, .global-toggle, .pattern-header, .pattern-controls, .enabled-toggle, .pattern-content-grid, .flags-group, .color-circle-wrapper {
+  .setting-item, .setting-control, .default-color, .global-toggle, .pattern-header, .pattern-controls, .enabled-toggle, .pattern-content-grid, .color-circle-wrapper {
     display: flex;
     align-items: center;
   }
@@ -296,7 +290,6 @@
   .pattern-header { justify-content: space-between; margin-bottom: 8px; flex-wrap: nowrap; gap: 10px; }
   .pattern-controls { gap: 8px; margin-left: 10px; flex-shrink: 0; }
   .enabled-toggle { gap: 4px; font-size: var(--font-ui-small); color: var(--text-muted); cursor: pointer; }
-  .flags-group { gap: 5px; }
   .pattern-content-grid { gap: 10px; }
   .settings-actions { margin: 15px 0; justify-content: flex-end; } /* Grouped with general spacing */
 
@@ -307,7 +300,6 @@
   /* Common styles for inputs (text, number) and selects */
   .pattern-name-input,
   .pattern-field input[type='text'],
-  .pattern-field input[type='number'],
   .pattern-field select {
     font-size: var(--font-ui-small);
     padding: 6px 8px;
@@ -330,14 +322,6 @@
   /* =========================================
      Buttons
      ========================================= */
-  /* Base button properties for all custom buttons */
-  .button-base {
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.2s, color 0.2s; /* Added color transition */
-  }
-
   /* Accent buttons (Add Pattern, Reset to Dropdown) */
   .add-pattern-button, .reset-to-dropdown-button {
     background-color: var(--interactive-accent);
@@ -345,12 +329,18 @@
     font-weight: 500;
   }
   .add-pattern-button {
-    composes: button-base;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
     padding: 8px 15px;
     font-size: var(--font-ui-small);
   }
   .reset-to-dropdown-button {
-    composes: button-base;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
     padding: 6px 12px;
     font-size: 13px;
   }
@@ -361,7 +351,10 @@
 
   /* Destructive button (Reset to Defaults) */
   .reset-button {
-    composes: button-base;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
     background-color: #ff4444;
     color: white;
     font-size: 14px;
@@ -372,7 +365,10 @@
 
   /* Text-only button (Delete Pattern) */
   .delete-button {
-    composes: button-base;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
     background: none;
     color: var(--text-muted);
     font-size: 1.4em;
@@ -414,51 +410,127 @@
   .pattern-name-input { flex: 1 5 80px; font-weight: 500; }
   .pattern-field.css-class-field.header-field {
     flex: 0 0 220px; /* flex-grow flex-shrink flex-basis; fixed width for full text */
-    max-width: 250px;
   }
 
-  /* Pattern content grid flex distribution */
-  .pattern-field.regex-field-only { flex: 1 1 90%; }
-  .pattern-field.capture-group-field { flex: 0 0 35px; }
-  .pattern-field.flags-field { flex: 0 0 auto; }
+  .pattern-field.css-class-field.header-field input,
+  .pattern-field.css-class-field.header-field select {
+    width: 100%; /* Occupy full width within its flex item */
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+    text-align: center; /* Center text as requested */
+    margin: 0; /* Remove default input margin */
+  }
 
-  /* Color input specific styles */
-  .color-preview {
-    width: 12px; height: 12px;
-    border: 1px solid #ccc; border-radius: 2px;
-    margin-right: 5px;
-    vertical-align: middle;
+  .pattern-field.css-class-field.header-field .empty-placeholder {
+    color: var(--text-muted);
   }
-  .default-color input[type='color'] {
-    width: 50px; height: 30px;
-    padding: 0; border: 1px solid #ccc; border-radius: 4px;
-    cursor: pointer;
+
+  .reset-to-dropdown-button {
+    margin-left: 10px;
+    white-space: nowrap; /* Prevent text wrapping */
+    background-color: var(--background-modifier-form-field);
+    color: var(--text-normal);
+    border: 1px solid var(--background-modifier-border);
   }
+
+  .reset-to-dropdown-button:hover {
+    background-color: var(--background-modifier-border);
+  }
+
+  .pattern-css-class-select {
+    -webkit-appearance: none; /* Remove default browser styling for dropdown */
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20256%20256%22%3E%3Cpath%20fill%3D%22currentColor%22%20d%3D%22M208.49%2093.49L128%20173.98l-80.49-80.49a12%2012%200%200%200-17%2017l88%2088a12%2012%200%200%200%2017%200l88-88a12%2012%200%200%200-17-17z%22%2F%3E%3C%2Fsvg%3E'); /* Custom arrow */
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 12px;
+    padding-right: 30px; /* Make space for the arrow */
+  }
+
+  .pattern-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto; /* Push controls to the right */
+  }
+
   .color-input-circle {
-    width: 150%; height: 150%;
-    border: none; padding: 0; background: none;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border-radius: 50%;
+    overflow: hidden;
     cursor: pointer;
-    -webkit-appearance: none; -moz-appearance: none; appearance: none;
+    border: 1px solid var(--background-modifier-border);
   }
-  .color-input-circle::-webkit-color-swatch-wrapper { padding: 0; }
-  .color-input-circle::-webkit-color-swatch, .color-input-circle::-moz-color-swatch { border: none; border-radius: 50%; }
 
-  /* Accessibility */
+  .color-input-circle::-webkit-color-swatch-wrapper {
+    padding: 0;
+  }
+
+  .color-input-circle::-webkit-color-swatch {
+    border: none;
+    border-radius: 50%;
+  }
+
+  .enabled-toggle {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 14px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .pattern-content-grid {
+    display: flex; /* Use flexbox */
+    align-items: center; /* Align items vertically */
+    gap: 10px; /* Space between fields */
+    width: 100%;
+  }
+
+  .pattern-content-grid input[type="text"] {
+    flex: 1; /* Allow inputs to grow and shrink */
+  }
+
+  .pattern-field.regex-field-only {
+    flex: 3; /* Give more space to regex */
+  }
+
+  .pattern-field.capture-group-field {
+    flex: 1; /* Less space for capture group */
+  }
+
+  .pattern-field.flags-field {
+    flex: 0 0 auto; /* Fixed size for flags */
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+  }
+
+  .flags-checkboxes {
+    display: flex;
+    gap: 10px; /* Space between flag checkboxes */
+  }
+
+  .flags-checkboxes label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
   .visually-hidden {
-    position: absolute; width: 1px; height: 1px;
-    margin: -1px; padding: 0; overflow: hidden;
-    clip: rect(0, 0, 0, 0); border: 0;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
   }
-
-  /* Specific styles for CSS class fields */
-  .pattern-field.css-class-field.header-field input[type='text'],
-  .pattern-field.css-class-field.header-field select,
-  .pattern-css-class-select { flex-grow: 1; }
-
-  /* Rely on parent's gap for spacing between select and button within header-field */
-  /* .pattern-css-class-select { margin-right: 10px; } */
-  /* .reset-to-dropdown-button { margin-left: 10px; padding: 6px 12px; font-size: 13px; } */
-
-  .css-class-field input::placeholder, .css-class-field input, .css-class-field select { text-align: center; }
-  .flag-checkbox span { margin-left: 3px; }
 </style>
