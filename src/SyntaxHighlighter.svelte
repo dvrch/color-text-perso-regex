@@ -4,8 +4,12 @@
   export let content = "";
   export let customPatterns = []; // Expects an array of pattern objects
   export let enableGlobalSyntaxHighlighting = true;
+  export let defaultTextColor = '#808080'; // Add this new prop with a default value
 
   let highlighted = "";
+
+  // Add this console.log to inspect the value of defaultTextColor
+  $: console.log('SyntaxHighlighter: defaultTextColor is', defaultTextColor);
 
   function escapeHtml(str) {
     if (str === undefined || str === null) return "";
@@ -93,13 +97,13 @@
 </script>
 
 <div class="syntax-container-dj" role="region" aria-label="Highlighted Code Content">
-  {@html highlighted}
+  <span style="color: {defaultTextColor} !important;">{@html highlighted}</span>
 </div>
 
 <style>
   .syntax-container-dj {
     background-color: var(--background-primary);
-    color: var(--text-normal);
+    /* The color is now set via the style attribute directly on the div */
     font-family: var(--font-monospace, monospace);
     padding: 1em;
     border-radius: var(--radius-m, 4px);
@@ -110,6 +114,21 @@
     font-size: var(--font-ui-small, 0.9em);
   }
 
+  /* Remove these as the color is now set inline */
+  /* .syntax-container-dj { */
+  /*   color: var(--default-text-color, var(--text-normal, #808080)); */
+  /* } */
+  
+  /* :global(.syntax-container-dj) { */
+  /*   color: var(--default-text-color, var(--text-normal, #808080)); */
+  /* } */
+
+  /* Remove this global CSS variable definition from here, as it won't apply globally */
+  /* :root { */
+  /*   --default-text-color: #808080; */
+  /* } */
+
+  /* Adjust existing styles if they conflict */
   :global(.key-dj) { color: #F92672; font-weight: bold; }
   :global(.func-dj) { color: #A6E22E; }
   :global(.comm-dj) { color: #75715E; font-style: italic; }
