@@ -8,9 +8,8 @@ import SyntaxHighlighterSvelte from './SyntaxHighlighter.svelte';
 import SettingsEditorSvelte from './SettingsEditor.svelte';
 import { mount, unmount, type Svelte4Constructor } from './svelte-utils';
 import type { SvelteComponent } from 'svelte';
-import { DEFAULT_SETTINGS } from './SettingsDefaults.svelte';
 
-// Interfaces for settings (remain in main.ts for type safety of plugin core logic)
+// Interfaces and Default Settings (defined here for TypeScript compatibility in main.ts)
 export interface CustomPatternConfig {
   id: string;
   name: string;
@@ -28,34 +27,29 @@ export interface MyPluginSettings {
   customPatterns: CustomPatternConfig[];
 }
 
-// Define DEFAULT_PATTERNS, DEFAULT_SETTINGS, and normalizeAndMergeSettings here
-// as their original files are being removed and content moved to main.ts.
-
-// Placeholder/Example for DEFAULT_PATTERNS
-/* REMOVED: This was moved to SettingsDefaults.svelte
+// Default patterns (plain JavaScript objects - duplicated for main.ts compatibility)
 export const DEFAULT_PATTERNS: CustomPatternConfig[] = [
-  {
-    id: 'uuid',
-    name: 'UUID Pattern',
-    enabled: true,
-    regex: '\\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\\b',
-    flags: 'gi',
-    cls: 'sh-uuid',
-    color: '#D8A0DF',
-    captureGroup: '0',
-  },
-  // Add other default patterns here
+  { id: 'dj-comment', name: 'DJ Comments (#...)', enabled: true, regex: '#.*$', flags: 'gm', cls: 'comm-dj', color: '#16FF00', captureGroup: '' },
+  { id: 'dj-numbers', name: 'DJ Numbers', enabled: true, regex: '\\b(?:0[xX][0-9a-fA-F]+|0[oO][0-7]+|0[bB][01]+|[0-9]+\\.[0-9]*(?:[eE][+-]?[0-9]+)?|[0-9]+)\\b', flags: 'g', cls: 'num-dj', color: '#AE81FF', captureGroup: '' },
+  { id: 'dj-operators', name: 'DJ Operators', enabled: true, regex: '\\+|-|\\*|\\/|\\/\\/|\\|\\||\\\\|%|@|<<|>>|&|\\||\\^|~|<|>|<=|>=|==|!=|:=|=', flags: 'g', cls: 'op-dj', color: '#F92672', captureGroup: '' },
+  { id: 'dj-punctuation', name: 'DJ Punctuation', enabled: true, regex: '[.,;:?!|µ]', flags: 'g', cls: 'ponct-dj', color: '#A8F819', captureGroup: '' },
+  { id: 'dj-class-def', name: 'DJ Class Name', enabled: true, regex: '\\bclass\\s+([a-zA-Z_][a-zA-Z0-9_]*)', flags: 'g', cls: 'type-dj', color: '#66D9EF', captureGroup: '1' },
+  { id: 'dj-function-call', name: 'DJ Function Names/Calls', enabled: true, regex: '([a-zA-Z_][a-zA-Z0-9_]*)\\s*\\(', flags: 'g', cls: 'func-dj', color: '#A6E22E', captureGroup: '1' },
+  { id: 'dj-sentence-caps', name: 'DJ Sentence Start Capitals', enabled: true, regex: '(?:^|[.!?]\\s+)([A-Z])', flags: 'g', cls: 'sent-dj', color: '#66D9EF', captureGroup: '1' },
+  { id: 'dj-general-caps', name: 'DJ Capital Letters', enabled: true, regex: '([A-Z])', flags: 'g', cls: 'caps-dj', color: '#A6E22E', captureGroup: '1' },
+  { id: 'dj-delim-open', name: 'DJ Delimiters (Open)', enabled: true, regex: '\\(|\\{|\\[|\\"|«|<|_', flags: 'g', cls: 'delim-g-open-dj', color: '#E6AA74', captureGroup: '' },
+  { id: 'dj-delim-close', name: 'DJ Delimiters (Close)', enabled: true, regex: '\\)|\\}|\\]|\\"|»|>|_', flags: 'g', cls: 'delim-g-close-dj', color: '#FF0000', captureGroup: '' },
+  { id: 'dj-keywords', name: 'DJ Keywords', enabled: true, regex: '\\b(and|as|assert|async|await|break|class|continue|def|del|elif|else|except|finally|for|from|global|if|import|in|is|lambda|nonlocal|not|or|pass|raise|return|try|while|with|yield)\\b', flags: 'g', cls: 'key-dj', color: '#F92672', captureGroup: '' },
+  { id: 'dj-tag-example', name: 'DJ Tag Example', enabled: true, regex: '#(\\w+)', flags: 'gi', cls: 'tag-dj', color: '#8be9fd', captureGroup: '1' },
+  { id: 'dj-date-example', name: 'DJ Date Example', enabled: true, regex: '\\d{4}-\\d{2}-\\d{2}', flags: 'g', cls: 'date-dj', color: '#f1fa8c', captureGroup: '' },
 ];
-*/
 
-// Placeholder/Example for DEFAULT_SETTINGS
-/* REMOVED: This was moved to SettingsDefaults.svelte
+// Default settings (plain JavaScript object - duplicated for main.ts compatibility)
 export const DEFAULT_SETTINGS: MyPluginSettings = {
   enableGlobalSyntaxHighlighting: true,
-  defaultTextColor: '#000000',
-  customPatterns: JSON.parse(JSON.stringify(DEFAULT_PATTERNS)), // Initialize with a deep copy
+  defaultTextColor: '#808080', // Gris par défaut
+  customPatterns: JSON.parse(JSON.stringify(DEFAULT_PATTERNS)), // Deep copy for initial state
 };
-*/
 
 // Placeholder/Example for normalizeAndMergeSettings
 export function normalizeAndMergeSettings(
