@@ -6,6 +6,5 @@
   "isDesktopOnly": false,
   "description": "A powerful plugin for Obsidian that allows you to define custom regex-based text coloring patterns",
   "author": "dvrch",
-  "authorUrl": "https://github.com/dvrch/color-text-perso-regex",
-  "repo": "https://github.com/dvrch/color-text-perso-regex"
+  "repo": "dvrch/color-text-perso-regex"
 }
