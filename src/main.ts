@@ -29,19 +29,19 @@ export interface MyPluginSettings {
 
 // Default patterns (plain JavaScript objects - duplicated for main.ts compatibility)
 export const DEFAULT_PATTERNS: CustomPatternConfig[] = [
-  { id: 'dj-comment', name: 'DJ Comments (#...)', enabled: true, regex: '#.*$', flags: 'gm', cls: 'comm-dj', color: '#16FF00', captureGroup: '' },
-  { id: 'dj-numbers', name: 'DJ Numbers', enabled: true, regex: '\\b(?:0[xX][0-9a-fA-F]+|0[oO][0-7]+|0[bB][01]+|[0-9]+\\.[0-9]*(?:[eE][+-]?[0-9]+)?|[0-9]+)\\b', flags: 'g', cls: 'num-dj', color: '#AE81FF', captureGroup: '' },
-  { id: 'dj-operators', name: 'DJ Operators', enabled: true, regex: '\\+|-|\\*|\\/|\\/\\/|\\|\\||\\\\|%|@|<<|>>|&|\\||\\^|~|<|>|<=|>=|==|!=|:=|=', flags: 'g', cls: 'op-dj', color: '#F92672', captureGroup: '' },
-  { id: 'dj-punctuation', name: 'DJ Punctuation', enabled: true, regex: '[.,;:?!|µ]', flags: 'g', cls: 'ponct-dj', color: '#A8F819', captureGroup: '' },
-  { id: 'dj-class-def', name: 'DJ Class Name', enabled: true, regex: '\\bclass\\s+([a-zA-Z_][a-zA-Z0-9_]*)', flags: 'g', cls: 'type-dj', color: '#66D9EF', captureGroup: '1' },
-  { id: 'dj-function-call', name: 'DJ Function Names/Calls', enabled: true, regex: '([a-zA-Z_][a-zA-Z0-9_]*)\\s*\\(', flags: 'g', cls: 'func-dj', color: '#A6E22E', captureGroup: '1' },
-  { id: 'dj-sentence-caps', name: 'DJ Sentence Start Capitals', enabled: true, regex: '(?:^|[.!?]\\s+)([A-Z])', flags: 'g', cls: 'sent-dj', color: '#66D9EF', captureGroup: '1' },
-  { id: 'dj-general-caps', name: 'DJ Capital Letters', enabled: true, regex: '([A-Z])', flags: 'g', cls: 'caps-dj', color: '#A6E22E', captureGroup: '1' },
-  { id: 'dj-delim-open', name: 'DJ Delimiters (Open)', enabled: true, regex: '\\(|\\{|\\[|\\"|«|<|_', flags: 'g', cls: 'delim-g-open-dj', color: '#E6AA74', captureGroup: '' },
-  { id: 'dj-delim-close', name: 'DJ Delimiters (Close)', enabled: true, regex: '\\)|\\}|\\]|\\"|»|>|_', flags: 'g', cls: 'delim-g-close-dj', color: '#FF0000', captureGroup: '' },
-  { id: 'dj-keywords', name: 'DJ Keywords', enabled: true, regex: '\\b(and|as|assert|async|await|break|class|continue|def|del|elif|else|except|finally|for|from|global|if|import|in|is|lambda|nonlocal|not|or|pass|raise|return|try|while|with|yield)\\b', flags: 'g', cls: 'key-dj', color: '#F92672', captureGroup: '' },
-  { id: 'dj-tag-example', name: 'DJ Tag Example', enabled: true, regex: '#(\\w+)', flags: 'gi', cls: 'tag-dj', color: '#8be9fd', captureGroup: '1' },
-  { id: 'dj-date-example', name: 'DJ Date Example', enabled: true, regex: '\\d{4}-\\d{2}-\\d{2}', flags: 'g', cls: 'date-dj', color: '#f1fa8c', captureGroup: '' },
+  { id: 'comment', name: 'Comments (#...)', enabled: true, regex: '#.*$', flags: 'gm', cls: 'comm-dj', color: '#16FF00', captureGroup: '' },
+  { id: 'numbers', name: 'Numbers', enabled: true, regex: '\\b(?:0[xX][0-9a-fA-F]+|0[oO][0-7]+|0[bB][01]+|[0-9]+\\.[0-9]*(?:[eE][+-]?[0-9]+)?|[0-9]+)\\b', flags: 'g', cls: 'num-dj', color: '#AE81FF', captureGroup: '' },
+  { id: 'operators', name: 'Operators', enabled: true, regex: '\\+|-|\\*|\\/|\\/\\/|\\|\\||\\\\|%|@|<<|>>|&|\\||\\^|~|<|>|<=|>=|==|!=|:=|=', flags: 'g', cls: 'op-dj', color: '#F92672', captureGroup: '' },
+  { id: 'punctuation', name: 'Punctuation', enabled: true, regex: '[.,;:?!|µ]', flags: 'g', cls: 'ponct-dj', color: '#A8F819', captureGroup: '' },
+  { id: 'class-definition', name: 'Class Name', enabled: true, regex: '\\bclass\\s+([a-zA-Z_][a-zA-Z0-9_]*)', flags: 'g', cls: 'type-dj', color: '#66D9EF', captureGroup: '1' },
+  { id: 'function-call', name: 'Function Names/Calls', enabled: true, regex: '([a-zA-Z_][a-zA-Z0-9_]*)\\s*\\(', flags: 'g', cls: 'func-dj', color: '#A6E22E', captureGroup: '1' },
+  { id: 'sentence-caps', name: 'Sentence Start Capitals', enabled: true, regex: '(?:^|[.!?]\\s+)([A-Z])', flags: 'g', cls: 'sent-dj', color: '#66D9EF', captureGroup: '1' },
+  { id: 'general-caps', name: 'Capital Letters', enabled: true, regex: '([A-Z])', flags: 'g', cls: 'caps-dj', color: '#A6E22E', captureGroup: '1' },
+  { id: 'delimiter-open', name: 'Delimiters (Open)', enabled: true, regex: '\\(|\\{|\\[|\\"|«|<|_', flags: 'g', cls: 'delim-g-open-dj', color: '#E6AA74', captureGroup: '' },
+  { id: 'delimiter-close', name: 'Delimiters (Close)', enabled: true, regex: '\\)|\\}|\\]|\\"|»|>|_', flags: 'g', cls: 'delim-g-close-dj', color: '#FF0000', captureGroup: '' },
+  { id: 'keywords', name: 'Keywords', enabled: true, regex: '\\b(and|as|assert|async|await|break|class|continue|def|del|elif|else|except|finally|for|from|global|if|import|in|is|lambda|nonlocal|not|or|pass|raise|return|try|while|with|yield)\\b', flags: 'g', cls: 'key-dj', color: '#F92672', captureGroup: '' },
+  { id: 'tag-pattern', name: 'Tag Pattern', enabled: true, regex: '#(\\w+)', flags: 'gi', cls: 'tag-dj', color: '#8be9fd', captureGroup: '1' },
+  { id: 'date-pattern', name: 'Date Pattern', enabled: true, regex: '\\d{4}-\\d{2}-\\d{2}', flags: 'g', cls: 'date-dj', color: '#f1fa8c', captureGroup: '' },
 ];
 
 // Default settings (plain JavaScript object - duplicated for main.ts compatibility)
@@ -184,7 +184,7 @@ export class SyntaxHighlighterView extends ItemView {
   }
 }
 
-export default class ColorTextPersoRegexPlugin extends Plugin {
+export default class SyntaxHighlighterPlugin extends Plugin {
   settings: MyPluginSettings;
   declare app: App;
   // manifest: PluginManifest; // Also inherited, declare if used directly and causing errors
@@ -202,11 +202,11 @@ export default class ColorTextPersoRegexPlugin extends Plugin {
       (leaf) => new SyntaxHighlighterView(leaf, this.settings)
     );
 
-    const ribbonIconEl = this.addRibbonIcon('highlighter', 'Open Syntax Highlighter View', (evt: MouseEvent) => { // Should now be recognized
+    this.addRibbonIcon('highlighter', 'Open Syntax Highlighter View', (evt: MouseEvent) => {
       this.activateView();
     });
 
-    this.addCommand({ // Should now be recognized
+    this.addCommand({
       id: 'open-syntax-highlighter-view',
       name: 'Open Syntax Highlighter View',
       callback: () => {
@@ -214,7 +214,7 @@ export default class ColorTextPersoRegexPlugin extends Plugin {
       },
     });
 
-    this.addSettingTab(new ColorTextPersoRegexSettingTab(this.app, this)); // Renommé
+    this.addSettingTab(new SyntaxHighlighterSettingTab(this.app, this)); // Renommé
 
     this.registerEvent( // Should now be recognized
       this.app.workspace.on('active-leaf-change', async (leaf) => { // this.app should be fine
@@ -271,7 +271,6 @@ export default class ColorTextPersoRegexPlugin extends Plugin {
   }
 
   onunload() {
-    // this.app.workspace.detachLeavesOfType(re); // Supprimé : anti-modèle
   }
 
   async loadSettings() {
@@ -297,14 +296,14 @@ interface SettingsEditorProps {
 // }
 
 
-class ColorTextPersoRegexSettingTab extends PluginSettingTab {
-  plugin: ColorTextPersoRegexPlugin;
+class SyntaxHighlighterSettingTab extends PluginSettingTab {
+  plugin: SyntaxHighlighterPlugin;
   declare app: App;
   declare containerEl: HTMLElement;
   private svelteComponent: (SvelteComponent & { $set: (props: Partial<SettingsEditorProps>) => void } & { $on: (event: 'updateSettings', callback: (e: CustomEvent<MyPluginSettings>) => void) => void } ) | undefined;
 
 
-  constructor(app: App, plugin: ColorTextPersoRegexPlugin) {
+  constructor(app: App, plugin: SyntaxHighlighterPlugin) {
     super(app, plugin);
     this.plugin = plugin;
   }

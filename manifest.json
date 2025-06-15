@@ -4,8 +4,6 @@
   "name": "color text perso regex",
   "minAppVersion": "1.0.0",
   "isDesktopOnly": false,
-  "description": "A powerful plugin that allows you to define custom regex-based text coloring patterns.",
-  "author": "dvrch",
-  "repo": "dvrch/color-text-perso-regex"
+  "description": "A powerful plugin for Obsidian that allows you to define custom regex-based text coloring patterns",
+  "author": "dvrch"
 }
-
