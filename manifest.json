@@ -1,7 +1,7 @@
 {
-  "id": "color-text-perso-regex",
-  "version": "1.0.0",
-  "name": "color text perso regex",
+  "id": "syntax-highlighter",
+  "version": "1.0.1",
+  "name": "Syntax Highlighter",
   "minAppVersion": "1.0.0",
   "isDesktopOnly": false,
   "description": "A powerful plugin for Obsidian that allows you to define custom regex-based text coloring patterns",
