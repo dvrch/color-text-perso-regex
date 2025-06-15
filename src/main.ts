@@ -184,7 +184,7 @@ export class SyntaxHighlighterView extends ItemView {
   }
 }
 
-export default class MyPlugin extends Plugin {
+export default class ColorTextPersoRegexPlugin extends Plugin {
   settings: MyPluginSettings;
   declare app: App;
   // manifest: PluginManifest; // Also inherited, declare if used directly and causing errors
@@ -205,7 +205,6 @@ export default class MyPlugin extends Plugin {
     const ribbonIconEl = this.addRibbonIcon('highlighter', 'Open Syntax Highlighter View', (evt: MouseEvent) => { // Should now be recognized
       this.activateView();
     });
-    ribbonIconEl.addClass('my-plugin-ribbon-class');
 
     this.addCommand({ // Should now be recognized
       id: 'open-syntax-highlighter-view',
@@ -215,7 +214,7 @@ export default class MyPlugin extends Plugin {
       },
     });
 
-    this.addSettingTab(new SyntaxHighlighterSettingTab(this.app, this)); // this.app should be fine, addSettingTab should be recognized
+    this.addSettingTab(new ColorTextPersoRegexSettingTab(this.app, this)); // Renommé
 
     this.registerEvent( // Should now be recognized
       this.app.workspace.on('active-leaf-change', async (leaf) => { // this.app should be fine
@@ -260,22 +259,19 @@ export default class MyPlugin extends Plugin {
   }
 
   activateView() {
-    const existingLeaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_SYNTAX); // this.app should be fine
-    if (existingLeaves.length > 0) {
-      this.app.workspace.revealLeaf(existingLeaves[0]); // this.app should be fine
+    const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_SYNTAX);
+    if (leaves.length > 0) {
+      this.app.workspace.revealLeaf(leaves[0]);
       return;
     }
 
-    const leaf = this.app.workspace.getLeaf('split', 'vertical'); // this.app should be fine
-    leaf.setViewState({
-      type: VIEW_TYPE_SYNTAX,
-      active: true,
-    });
-    this.app.workspace.revealLeaf(leaf); // this.app should be fine
+    const leaf = this.app.workspace.getLeaf('split', 'vertical');
+    leaf.setViewState({ type: VIEW_TYPE_SYNTAX, active: true });
+    this.app.workspace.revealLeaf(leaf);
   }
 
   onunload() {
-    this.app.workspace.detachLeavesOfType(VIEW_TYPE_SYNTAX); // this.app should be fine
+    // this.app.workspace.detachLeavesOfType(re); // Supprimé : anti-modèle
   }
 
   async loadSettings() {
@@ -301,14 +297,14 @@ interface SettingsEditorProps {
 // }
 
 
-class SyntaxHighlighterSettingTab extends PluginSettingTab {
-  plugin: MyPlugin;
+class ColorTextPersoRegexSettingTab extends PluginSettingTab {
+  plugin: ColorTextPersoRegexPlugin;
   declare app: App;
   declare containerEl: HTMLElement;
   private svelteComponent: (SvelteComponent & { $set: (props: Partial<SettingsEditorProps>) => void } & { $on: (event: 'updateSettings', callback: (e: CustomEvent<MyPluginSettings>) => void) => void } ) | undefined;
 
 
-  constructor(app: App, plugin: MyPlugin) {
+  constructor(app: App, plugin: ColorTextPersoRegexPlugin) {
     super(app, plugin);
     this.plugin = plugin;
   }
