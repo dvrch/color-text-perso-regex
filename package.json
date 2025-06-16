@@ -1,5 +1,5 @@
 {
-	"name": "color-text-perso-regex",
+	"name": "syntax-highlighter",
 	"version": "1.0.0",
 	"description": "A powerful plugin for Obsidian that allows you to define custom regex-based text coloring patterns",
 	"main": "main.js",

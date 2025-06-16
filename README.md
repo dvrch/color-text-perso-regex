@@ -18,7 +18,7 @@ A powerful and highly customizable text coloring plugin for Obsidian, allowing y
     *   "Reset to Defaults" button at the bottom allows you to quickly revert all settings to their initial state.
 *   **Dedicated Preview Pane:** See a live preview of your coloring rules applied to the current note's content.
 
-## Installation 
+## Installation
 
 ### Via Community Plugins
 
@@ -32,8 +32,8 @@ A powerful and highly customizable text coloring plugin for Obsidian, allowing y
 
 ### Manual Installation
 
-1.  Download the latest release from the [Releases page](https://github.com/dvrch/color-text-perso-regex/releases/latest).
-2.  Extract the files (`main.js`, `manifest.json`, `versions.json`) into your vault's plugin folder: `.obsidian/plugins/color-text-perso-regex`.
+1.  Download the latest release from the [Releases page](https://github.com/dvrch/syntax-highlighter/releases/latest).
+2.  Extract the files (`main.js`, `manifest.json`, `versions.json`) into your vault's plugin folder: `.obsidian/plugins/syntax-highlighter`.
 3.  Reload Obsidian.
 4.  Enable the plugin in Settings -> Community Plugins.
 
@@ -69,9 +69,9 @@ The settings panel allows you to:
 ## Support
 
 If you encounter any issues or have suggestions, please:
-1.  Check the [documentation](https://github.com/dvrch/color-text-perso-regex/wiki).
-2.  Search for [existing issues](https://github.com/dvrch/color-text-perso-regex/issues).
-3.  Create a [new issue](https://github.com/dvrch/color-text-perso-regex/issues/new) if needed.
+1.  Check the [documentation](https://github.com/dvrch/syntax-highlighter/wiki).
+2.  Search for [existing issues](https://github.com/dvrch/syntax-highlighter/issues).
+3.  Create a [new issue](https://github.com/dvrch/syntax-highlighter/issues/new) if needed.
 
 ## Contributing
 
