@@ -18,7 +18,7 @@ A powerful and highly customizable text coloring plugin for Obsidian, allowing y
     *   "Reset to Defaults" button at the bottom allows you to quickly revert all settings to their initial state.
 *   **Dedicated Preview Pane:** See a live preview of your coloring rules applied to the current note's content.
 
-## Installation
+## Installation 
 
 ### Via Community Plugins
 
